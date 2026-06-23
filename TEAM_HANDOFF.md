@@ -29,10 +29,11 @@ The AWS environment is live. Do not share these credentials outside the team.
 **Objective:** Finalize the dataset generation and validate the official output.
 
 ### Your Action Items:
-1. **Branch Out & Setup:**
-   Because `main` is locked, you must branch out before executing:
+1. **Switch to Active Branch:**
+   Because `main` is locked, switch to the team's integration branch:
    ```bash
-   git checkout -b data/final-50k-run
+   git fetch origin
+   git checkout active
    ```
    Ensure the full 487MB `candidates.jsonl` is sitting inside your local `data/` folder.
 
@@ -47,7 +48,10 @@ The AWS environment is live. Do not share these credentials outside the team.
    python validate_submission.py submission.csv
    ```
 4. **Commit the Results:**
-   Add the verified `submission.csv`, push your branch (`git push origin data/final-50k-run`), and open a **Pull Request** for Nithin to review.
+   Add the verified `submission.csv` and push directly to the integration branch:
+   ```bash
+   git push origin active
+   ```
 
 ---
 
@@ -55,10 +59,11 @@ The AWS environment is live. Do not share these credentials outside the team.
 **Objective:** Spin up the Streamlit frontend and record the final split-screen demo.
 
 ### Your Action Items:
-1. **Branch Out & Setup:**
-   Because `main` is locked, you must branch out before executing:
+1. **Switch to Active Branch:**
+   Because `main` is locked, switch to the team's integration branch:
    ```bash
-   git checkout -b ui/demo-prep
+   git fetch origin
+   git checkout active
    ```
 
 2. **Launch the Dashboard:**
@@ -73,24 +78,29 @@ The AWS environment is live. Do not share these credentials outside the team.
    * **Left Side:** Your Streamlit UI.
    * **Right Side:** The terminal running the Artillery load test (`artillery run infra/load_test.yml`).
    * Show the judges the beautiful UI rendering results *while* the terminal matrix-scrolls with heavy concurrent load-testing metrics.
-5. **Push UI Tweaks via PR:**
-   Push your branch (`git push origin ui/demo-prep`) and open a **Pull Request**.
+5. **Push UI Tweaks:**
+   If you made any visual changes, push them directly to the integration branch:
+   ```bash
+   git push origin active
+   ```
 
 ---
 
 ## 🛡️ Git & GitHub Collaboration Protocol (Enforced)
 To maintain an enterprise-grade repository and prevent merge conflicts in the final 48 hours, **direct pushes to the `main` branch are strictly prohibited.**
 
-1. **Always Branch Out:**
+1. **The Active Branch:**
+   All team members must commit and push their ongoing work to the `active` branch.
    ```bash
-   git checkout -b <your-name>/<feature-name>
+   git checkout active
+   git pull origin active
    ```
 2. **Commit with Tags:**
    Use professional prefix tags: `[FEAT]`, `[FIX]`, `[UI]`, `[DATA]`, `[INFRA]`.
-3. **Open a Pull Request (PR):**
-   When pushing your branch to GitHub, open a PR. 
-4. **Review Required:**
-   Nithin (Team Lead) will review the PR, check for sandbox constraint violations (e.g., NumPy imports), and merge it into `main`.
+3. **The Final Pull Request:**
+   Once all tasks are completed and pushed to `active`, Nithin (Team Lead) will open exactly **one Pull Request** to merge `active` into `main` for the final submission.
+4. **Constraint Review:**
+   During that final PR, the code will be audited to ensure no sandbox constraints (like NumPy imports) were violated.
 
 ---
 
