@@ -71,8 +71,8 @@ echo "🚀 Launching EC2 Compute Node..."
 INSTANCE_ID=$(aws ec2 run-instances \
     --image-id ami-0c55b159cbfafe1f0 \
     --instance-type t3.xlarge \
-    --subnet-id SUBNET_COMPUTE_ID_HERE \
-    --security-group-ids SG_EC2_COMPUTE_ID_HERE \
+    --subnet-id subnet-04c4ed24d6af8d75a \
+    --security-group-ids sg-049c6175bba321723 \
     --iam-instance-profile Name=$PROFILE_NAME \
     --metadata-options "HttpTokens=required,HttpPutResponseHopLimit=2,HttpEndpoint=enabled" \
     --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=TrioLogic-Semantic-Engine}]' \
