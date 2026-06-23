@@ -1,0 +1,27 @@
+config:
+  target: "http://localhost:8443" # For local testing; replace with NLB DNS for AWS testing
+  phases:
+    - duration: 30
+      arrivalRate: 2
+      name: "Warm up phase"
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 20
+      name: "Ramp up load"
+    - duration: 30
+      arrivalRate: 30
+      name: "Sustained peak"
+  payload:
+    # We simulate recruiters dropping nuanced JDs into the engine
+    - job_description: "Senior AI Systems Engineer. Must have deep expertise in vector databases, PostgreSQL pgvector, and deploying local sentence-transformers on AWS EC2."
+
+scenarios:
+  - name: "Semantic Ranking Query"
+    flow:
+      - post:
+          url: "/v1/rank"
+          json:
+            job_description: "{{ job_description }}"
+          capture:
+            - json: "$.status"
+              as: "status"
