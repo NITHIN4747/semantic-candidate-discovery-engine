@@ -1,0 +1,17 @@
+# sentence-transformers — CPU-friendly embedding model
+sentence-transformers==3.0.1
+
+# FastAPI + server (for the live sandbox UI)
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# Streamlit (for HuggingFace Spaces sandbox demo)
+streamlit==1.35.0
+
+# Standard utilities
+tqdm==4.66.4
+pyyaml==6.0.1
+
+# Validation (only used in dev — not needed at rank time)
+jsonschema==4.22.0
