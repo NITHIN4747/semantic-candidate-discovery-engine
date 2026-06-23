@@ -67,9 +67,13 @@ sleep 10
 # NOTE: Replace 'ami-XXXXXXX', 'subnet-XXXXXXX', and 'sg-XXXXXXX' with the actual IDs from your provision_network.sh output.
 # We are utilizing an Amazon Linux 2023 AMI which supports NitroTPM natively.
 
+echo "🚀 Fetching latest Amazon Linux 2023 AMI ID..."
+LATEST_AMI=$(aws ssm get-parameters --names /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64 --query 'Parameters[0].Value' --output text)
+echo "✅ Using AMI: $LATEST_AMI"
+
 echo "🚀 Launching EC2 Compute Node..."
 INSTANCE_ID=$(aws ec2 run-instances \
-    --image-id ami-0c55b159cbfafe1f0 \
+    --image-id $LATEST_AMI \
     --instance-type t3.xlarge \
     --subnet-id subnet-04c4ed24d6af8d75a \
     --security-group-ids sg-049c6175bba321723 \
