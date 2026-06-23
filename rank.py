@@ -387,7 +387,21 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     # Step 2: Embed the Job Description
     # ------------------------------------------------------------------
     print("[2/5] Embedding Job Description...")
-    jd_embedding = model.encode(JOB_DESCRIPTION, convert_to_tensor=False, show_progress_bar=False)
+    
+    # Read dynamic JD from API if it exists, otherwise use fallback
+    jd_text = JOB_DESCRIPTION
+    dynamic_jd_path = "data/current_jd.txt"
+    if os.path.exists(dynamic_jd_path):
+        try:
+            with open(dynamic_jd_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content:
+                    jd_text = content
+                    print("      Loaded dynamic JD from data/current_jd.txt")
+        except Exception as e:
+            print(f"      [WARN] Failed to read {dynamic_jd_path}: {e}")
+    
+    jd_embedding = model.encode(jd_text, convert_to_tensor=False, show_progress_bar=False)
     jd_vec = jd_embedding.tolist()   # convert numpy array → plain Python list
     print(f"      JD vector: {len(jd_vec)} dimensions")
 
