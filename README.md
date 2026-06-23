@@ -25,10 +25,10 @@ Our backend is built on a **Zero-Trust AWS Topology**, ensuring the data never l
 ```mermaid
 flowchart TD
     %% Styling
-    classDef public fill:#e6f3ff,stroke:#0066cc,stroke-width:2px;
-    classDef private fill:#fff3e6,stroke:#cc6600,stroke-width:2px;
-    classDef database fill:#e6ffe6,stroke:#009933,stroke-width:2px;
-    classDef security fill:#ffe6e6,stroke:#cc0000,stroke-width:2px;
+    classDef public fill:#e6f3ff,stroke:#0066cc,stroke-width:2px,color:#000000;
+    classDef private fill:#fff3e6,stroke:#cc6600,stroke-width:2px,color:#000000;
+    classDef database fill:#e6ffe6,stroke:#009933,stroke-width:2px,color:#000000;
+    classDef security fill:#ffe6e6,stroke:#cc0000,stroke-width:2px,color:#000000;
 
     Client([Recruiter UI - Streamlit]):::public
     NLB[Network Load Balancer<br/>Port 443]:::public
