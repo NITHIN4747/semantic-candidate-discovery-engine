@@ -394,8 +394,8 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     # ------------------------------------------------------------------
     # Step 3 + 4: Stream candidates, embed, compute similarity, track top-K
     # ------------------------------------------------------------------
-    print(f"[3/5] Streaming and ranking candidates from: {candidates_path}")
-    print("      This may take 2–4 minutes on CPU for ~50K candidates...")
+    print(f"[3/5] Streaming and ranking candidates in batches from: {candidates_path}")
+    print("      Using batch_size=32 for optimal CPU throughput within RAM limits.")
 
     # Min-heap: stores (score, candidate_id, candidate_dict)
     # We use a min-heap of size K so we efficiently track the top-K
@@ -404,39 +404,67 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     processed = 0
     skipped = 0
 
-    for cand in iter_candidates(candidates_path):
-        candidate_id = cand.get("candidate_id", "")
-        if not candidate_id:
-            skipped += 1
+    # Helper to yield chunks
+    def iter_candidate_batches(path: str, batch_size: int = 32):
+        batch = []
+        for c in iter_candidates(path):
+            batch.append(c)
+            if len(batch) >= batch_size:
+                yield batch
+                batch = []
+        if batch:
+            yield batch
+
+    for batch in iter_candidate_batches(candidates_path, batch_size=32):
+        valid_cands = []
+        cand_texts = []
+
+        for cand in batch:
+            candidate_id = cand.get("candidate_id", "")
+            if not candidate_id:
+                skipped += 1
+                continue
+
+            cand_text = build_candidate_text(cand)
+            if not cand_text.strip():
+                skipped += 1
+                continue
+
+            valid_cands.append(cand)
+            cand_texts.append(cand_text)
+
+        if not valid_cands:
             continue
 
-        # Build text blob for this candidate
-        cand_text = build_candidate_text(cand)
-        if not cand_text.strip():
-            skipped += 1
-            continue
+        # Embed candidate batch in one go using batch_size=32
+        cand_embeddings = model.encode(cand_texts, batch_size=32, convert_to_tensor=False, show_progress_bar=False)
+        cand_vecs = cand_embeddings.tolist()
 
-        # Embed candidate (returns numpy array → convert to list)
-        cand_embedding = model.encode(cand_text, convert_to_tensor=False, show_progress_bar=False)
-        cand_vec = cand_embedding.tolist()
+        for i, cand in enumerate(valid_cands):
+            candidate_id = cand.get("candidate_id", "")
+            cand_vec = cand_vecs[i]
 
-        # RULE 3: Cosine similarity via raw Python loops (no NumPy)
-        semantic_score = cosine_similarity(jd_vec, cand_vec)
+            # RULE 3: Cosine similarity via raw Python loops (no NumPy)
+            semantic_score = cosine_similarity(jd_vec, cand_vec)
 
-        # --- Behavioral Signal Modifier ---
-        # The JD explicitly warns: down-weight candidates who are
-        # "perfect on paper" but behaviorally unavailable.
-        # This multiplier adjusts the final score based on platform signals.
-        score = semantic_score * _behavioral_modifier(cand)
+            # --- Behavioral Signal Modifier ---
+            # The JD explicitly warns: down-weight candidates who are
+            # "perfect on paper" but behaviorally unavailable.
+            # This multiplier adjusts the final score based on platform signals.
+            score = semantic_score * _behavioral_modifier(cand)
 
-        # Maintain top-K min-heap
-        if len(heap) < TOP_K:
-            heapq.heappush(heap, (score, candidate_id, cand))
-        elif score > heap[0][0]:
-            heapq.heapreplace(heap, (score, candidate_id, cand))
+            # Maintain top-K min-heap
+            if len(heap) < TOP_K:
+                heapq.heappush(heap, (score, candidate_id, cand))
+            elif score > heap[0][0]:
+                heapq.heapreplace(heap, (score, candidate_id, cand))
 
-        processed += 1
-        if processed % 1000 == 0:
+        # Progress reporting
+        prev_processed = processed
+        processed += len(valid_cands)
+        
+        # Print if we crossed a 1000 boundary
+        if prev_processed // 1000 < processed // 1000:
             elapsed = time.time() - t_start
             best_score = heap[0][0] if heap else 0.0
             print(f"      Processed {processed:,} candidates | "
