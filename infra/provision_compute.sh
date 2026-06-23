@@ -68,7 +68,7 @@ sleep 10
 # We are utilizing an Amazon Linux 2023 AMI which supports NitroTPM natively.
 
 echo "🚀 Fetching latest Amazon Linux 2023 AMI ID..."
-LATEST_AMI=$(aws ssm get-parameters --names /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64 --query 'Parameters[0].Value' --output text)
+LATEST_AMI=$(aws ssm get-parameters --names /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2 --query 'Parameters[0].Value' --output text)
 echo "✅ Using AMI: $LATEST_AMI"
 
 echo "🚀 Launching EC2 Compute Node..."
