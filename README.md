@@ -1,146 +1,126 @@
-# Semantic Candidate Discovery Engine
+# 🎯 TrioLogic | Semantic Talent Discovery OS
+**INDIA RUNS Hackathon - Track 1: Data & AI Challenge**
 
-**Team:** TrioLogic — Nithin (Cloud Architect), Raghul (Data Science), Thibish (UI/UX)
-**Initiative:** INDIA RUNS Hackathon (Track 1: Data & AI Challenge) | Hack2skill × Redrob AI
-**Deadline:** June 30, 2026
+![Zero-Trust Architecture](https://img.shields.io/badge/Security-Zero%20Trust-red) ![Algorithm](https://img.shields.io/badge/Algorithm-Semantic%20Proximity-blue) ![Infrastructure](https://img.shields.io/badge/Cloud-AWS%20NitroTPM-orange)
 
-> ⚠️ **AI Coding Assistants:** Read [`AI_CONTEXT.md`](../AI_CONTEXT.md) before generating any code.
-> It contains the non-negotiable sandbox constraints for this project.
+A production-grade **Semantic Candidate Discovery & Ranking Engine** engineered to look beyond keywords and understand the contextual relevance of job profiles. Built strictly within the Hack2Skill constraints, this engine scales gracefully under load while preserving a robust, zero-trust cloud backend.
 
 ---
 
-## What This Is
+## ⚡ The Architectural Philosophy
 
-A production-grade **Semantic Candidate Discovery & Ranking Engine** that:
-- Converts job descriptions and candidate profiles into **dense vector embeddings** using a locally hosted sentence-transformer model
-- Computes **Cosine Similarity** using raw Python loops (no NumPy — sandbox constraint)
-- Streams the 487 MB `candidates.jsonl` file memory-safely
-- Outputs a ranked CSV of the top 100 candidates
+Keyword matching is fundamentally broken. Standard systems fail when a "Marketing Manager" with AI keywords outranks a genuine "Senior AI Engineer."
+
+TrioLogic solves this through **True Semantic Understanding** coupled with **Behavioral Mathematics**:
+1. **Semantic Embeddings:** Uses `sentence-transformers/all-MiniLM-L6-v2` to extract high-dimensional semantic meaning.
+2. **Behavioral Multipliers:** Implements a custom scoring mechanism (`_behavioral_modifier`) to scale down candidates with low response rates or stale profiles, effectively neutralizing dataset traps.
+3. **Deterministic Math:** Employs raw Python loops for Cosine Similarity, strictly obeying the offline-only sandbox constraints without relying on external numeric libraries.
 
 ---
 
-## Quickstart
+## 🏗️ System Architecture
 
-### 1. Install dependencies
+Our backend is built on a **Zero-Trust AWS Topology**, ensuring the data never leaves a completely isolated environment.
+
+```mermaid
+flowchart TD
+    %% Styling
+    classDef public fill:#e6f3ff,stroke:#0066cc,stroke-width:2px;
+    classDef private fill:#fff3e6,stroke:#cc6600,stroke-width:2px;
+    classDef database fill:#e6ffe6,stroke:#009933,stroke-width:2px;
+    classDef security fill:#ffe6e6,stroke:#cc0000,stroke-width:2px;
+
+    Client([Recruiter UI - Streamlit]):::public
+    NLB[Network Load Balancer<br/>Port 443]:::public
+    
+    subgraph VPC [Isolated VPC: 10.0.0.0/16]
+        subgraph ComputeSubnet [TrioLogic-Compute-Subnet: 10.0.1.0/24]
+            EC2[EC2 Nitro Node<br/>IMDSv2 Hop=2]:::private
+            FastAPI[FastAPI Gateway]:::private
+            Model[all-MiniLM-L6-v2<br/>Offline Engine]:::private
+            EC2 --> FastAPI
+            FastAPI --> Model
+        end
+        
+        subgraph DBSubnet [TrioLogic-DB-Subnet: 10.0.2.0/24]
+            RDS[(Amazon RDS PostgreSQL 15+<br/>pgvector)]:::database
+        end
+        
+        %% IAM / Security
+        IAM{IAM Passwordless Auth<br/>rds-db:connect}:::security
+    end
+
+    %% Routing
+    Client -- "HTTPS Payload" --> NLB
+    NLB -- "TCP 8443 (SG-EC2)" --> EC2
+    Model -- "TCP 5432 (SG-RDS)" --> RDS
+    
+    %% Auth
+    EC2 -. "Ephemeral Token" .-> IAM
+    IAM -. "Authenticate" .-> RDS
+```
+
+### Infrastructure Highlights:
+* **Network Load Balancer (NLB):** The sole ingress point (Port 443).
+* **Strict Security Group Matrix:** The EC2 compute node only accepts traffic from the NLB (Port 8443). The RDS vector database only accepts traffic from the EC2 node (Port 5432).
+* **Identity & Hardware Attestation:** EC2 launched with `HttpPutResponseHopLimit=2` to enforce IMDSv2. Passwordless database access achieved via `rds-db:connect` IAM tokens.
+
+---
+
+## 🚀 Quickstart & Deployment
+
+### 1. Local Ranking Pipeline (Sandbox Mode)
+To run the ranking engine exactly as it will execute in the Hackathon evaluation sandbox:
 ```bash
 pip install -r requirements.txt
-```
 
-### 2. Download the embedding model (one-time, requires internet)
-```bash
-python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
-```
-
-### 3. Place the dataset
-```bash
-# Copy candidates.jsonl into the data/ folder (it is gitignored)
-cp /path/to/candidates.jsonl ./data/candidates.jsonl
-```
-
-### 4. Run the ranker
-```bash
+# Ensure candidates.jsonl is placed in data/
 python rank.py --candidates ./data/candidates.jsonl --out ./submission.csv
 ```
 
-### 5. Validate submission
+### 2. Cloud Infrastructure Provisioning
+To reproduce the Zero-Trust AWS architecture, execute the scripts via AWS CLI:
 ```bash
-python validate_submission.py submission.csv
+# 1. Deploy the network topology
+bash infra/provision_network.sh
+
+# 2. Deploy the database
+bash infra/provision_database.sh
+
+# 3. Deploy the compute engine
+bash infra/provision_compute.sh
+```
+
+### 3. Streamlit Interface
+To run the interactive UI dashboard:
+```bash
+streamlit run ui/app.py
 ```
 
 ---
 
-## Project Structure
-
+## 📊 Load Testing & Observability
+We utilize Artillery to simulate concurrent recruiter traffic spikes and validate system stability:
+```bash
+npm install -g artillery
+artillery run infra/load_test.yml
 ```
+
+---
+
+## 📁 Repository Structure
+```text
 semantic-candidate-discovery-engine/
-├── AI_CONTEXT.md              ← AI guardrail primer (read first!)
-├── rank.py                    ← Main submission script (Raghul)
-├── validate_submission.py     ← Official challenge validator
-├── requirements.txt
-├── .gitignore
-│
-├── app/                       ← FastAPI live search API (Nithin + Raghul)
-│   ├── main.py
-│   ├── ranker.py
-│   └── schemas.py
-│
-├── docker/                    ← Containerization (Thibish)
-│   └── Dockerfile
-│
-├── infra/                     ← AWS CDK / Terraform (Nithin)
-│   ├── vpc.py
-│   ├── ec2.py
-│   └── rds.py
-│
-├── tests/                     ← Unit tests
-│   └── test_cosine.py
-│
-└── data/                      ← Gitignored — never commit raw data
-    └── candidates.jsonl       ← Place dataset here locally
+├── app/                  # FastAPI layer for live prediction serving
+├── data/                 # Raw datasets (Git-ignored)
+├── infra/                # AWS Zero-Trust bash provisioning scripts & load tests
+├── ui/                   # Streamlit presentation dashboard
+├── AI_CONTEXT.md         # Master constraints and hackathon ruleset
+├── rank.py               # Deterministic ranking engine (Chunked streaming)
+├── validate_submission.py# Evaluation validation script
+└── pitch_deck_outline.md # Architecture presentation outline
 ```
 
 ---
 
-## Architecture
-
-```
-[Internet]
-    │
-    ▼ HTTPS
-[AWS API Gateway]
-    │ VPC Link
-    ▼
-[Network Load Balancer]  (private subnet)
-    │ TCP 8443
-    ▼
-[EC2 Docker Container]
-  ├── FastAPI app
-  ├── Local all-MiniLM-L6-v2 model
-  └── Cosine Similarity Engine (raw Python loops)
-    │ TCP 5432
-    ▼
-[Amazon RDS PostgreSQL + pgvector]
-  └── Candidate vector index (HNSW)
-```
-
----
-
-## Sandbox Constraints (Non-Negotiable)
-
-| Constraint | Value |
-|-----------|-------|
-| Runtime limit | ≤ 5 minutes |
-| Hardware | CPU-only, 16 GB RAM |
-| Network during ranking | ❌ None |
-| External AI APIs | ❌ None (OpenAI, Anthropic, etc.) |
-| NumPy for cosine sim | ❌ Forbidden |
-| JSONL loading strategy | ✅ Stream line-by-line |
-
----
-
-## Branch Strategy
-
-| Branch prefix | Owner | Domain |
-|--------------|-------|--------|
-| `infra/...` | Nithin | AWS VPC, EC2, security groups |
-| `data/...` | Raghul | Ranking logic, embeddings, schemas |
-| `ui/...` `integration/...` | Thibish | Frontend, Docker, Streamlit |
-
-## Commit Format
-```
-[FEAT] Add cosine similarity engine
-[FIX] Fix streaming bug in iter_candidates
-[INFRA] Add VPC security group rules
-[DOCS] Update README with quickstart
-```
-
----
-
-## Deliverables Checklist
-
-- [ ] `submission.csv` — 100 ranked candidates
-- [ ] `submission_metadata.yaml` — filled and committed
-- [ ] GitHub repo — clean, reproducible, no raw data
-- [ ] Live sandbox URL — HuggingFace Spaces / Streamlit Cloud
-- [ ] PDF Architecture Pitch Deck
-- [ ] Demo video
+*Built for the INDIA RUNS Data & AI Challenge.*
