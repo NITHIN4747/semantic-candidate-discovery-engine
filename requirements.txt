@@ -12,6 +12,8 @@ streamlit==1.35.0
 # Standard utilities
 tqdm==4.66.4
 pyyaml==6.0.1
+pandas==2.2.2
+requests==2.32.3
 
 # Validation (only used in dev — not needed at rank time)
 jsonschema==4.22.0
