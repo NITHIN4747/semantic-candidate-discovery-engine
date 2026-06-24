@@ -1,0 +1,101 @@
+candidate_id,rank,score,reasoning
+CAND_0039754,1,0.7534,Senior Applied Scientist | 16.2 yrs exp | 10 AI/ML skills | response rate 81% | open to work | GitHub score 78 | notice 30d | semantic score 0.7534
+CAND_0088025,2,0.7432,Staff Machine Learning Engineer | 8.6 yrs exp | 11 AI/ML skills | response rate 83% | open to work | GitHub score 75 | notice 90d | semantic score 0.7432
+CAND_0002025,3,0.7428,Senior AI Engineer | 5.9 yrs exp | 8 AI/ML skills | response rate 80% | open to work | GitHub score 97 | notice 30d | semantic score 0.7428
+CAND_0077337,4,0.7411,Staff Machine Learning Engineer | 7.0 yrs exp | 7 AI/ML skills | response rate 95% | open to work | GitHub score 68 | notice 60d | semantic score 0.7411
+CAND_0046525,5,0.7382,Senior Machine Learning Engineer | 6.1 yrs exp | 8 AI/ML skills | response rate 88% | open to work | GitHub score 37 | notice 60d | semantic score 0.7382
+CAND_0046064,6,0.7352,Senior NLP Engineer | 8.9 yrs exp | 6 AI/ML skills | response rate 78% | open to work | GitHub score 67 | notice 30d | semantic score 0.7352
+CAND_0055905,7,0.7328,Senior Machine Learning Engineer | 8.1 yrs exp | 7 AI/ML skills | response rate 87% | open to work | notice 30d | semantic score 0.7328
+CAND_0061339,8,0.7310,Search Engineer | 4.2 yrs exp | 6 AI/ML skills | response rate 90% | open to work | GitHub score 86 | notice 90d | semantic score 0.7310
+CAND_0071974,9,0.7293,Senior AI Engineer | 7.8 yrs exp | 7 AI/ML skills | response rate 76% | open to work | GitHub score 83 | notice 45d | semantic score 0.7293
+CAND_0011687,10,0.7241,Senior NLP Engineer | 7.8 yrs exp | 6 AI/ML skills | response rate 89% | open to work | GitHub score 76 | notice 15d | semantic score 0.7241
+CAND_0053591,11,0.7238,AI Engineer | 5.3 yrs exp | 4 AI/ML skills | response rate 81% | open to work | GitHub score 76 | notice 60d | semantic score 0.7238
+CAND_0081846,12,0.7200,Lead AI Engineer | 6.7 yrs exp | 9 AI/ML skills | response rate 73% | open to work | GitHub score 34 | notice 30d | semantic score 0.7200
+CAND_0079387,13,0.7184,AI Engineer | 6.9 yrs exp | 8 AI/ML skills | response rate 81% | open to work | GitHub score 64 | notice 30d | semantic score 0.7184
+CAND_0098454,14,0.7176,AI Specialist | 6.6 yrs exp | 4 AI/ML skills | response rate 87% | open to work | GitHub score 29 | notice 60d | semantic score 0.7176
+CAND_0051615,15,0.7173,Search Engineer | 4.6 yrs exp | 9 AI/ML skills | response rate 88% | open to work | GitHub score 95 | notice 60d | semantic score 0.7173
+CAND_0055992,16,0.7162,AI Engineer | 16.9 yrs exp | 5 AI/ML skills | response rate 72% | open to work | GitHub score 65 | notice 60d | semantic score 0.7162
+CAND_0008295,17,0.7148,AI Research Engineer | 6.5 yrs exp | 7 AI/ML skills | response rate 89% | open to work | GitHub score 51 | notice 45d | semantic score 0.7148
+CAND_0050454,18,0.7142,AI Engineer | 6.8 yrs exp | 8 AI/ML skills | response rate 77% | open to work | notice 30d | semantic score 0.7142
+CAND_0006567,19,0.7136,Senior AI Engineer | 7.9 yrs exp | 6 AI/ML skills | response rate 79% | open to work | GitHub score 35 | notice 60d | semantic score 0.7136
+CAND_0062247,20,0.7126,AI Engineer | 7.3 yrs exp | 8 AI/ML skills | response rate 78% | open to work | GitHub score 53 | notice 30d | semantic score 0.7126
+CAND_0068351,21,0.7120,Lead AI Engineer | 6.4 yrs exp | 7 AI/ML skills | response rate 86% | notice 0d | semantic score 0.7120
+CAND_0019480,22,0.7107,NLP Engineer | 2.8 yrs exp | 4 AI/ML skills | response rate 87% | open to work | GitHub score 70 | notice 90d | semantic score 0.7107
+CAND_0060054,23,0.7079,AI Engineer | 6.4 yrs exp | 2 AI/ML skills | response rate 86% | notice 15d | semantic score 0.7079
+CAND_0005538,24,0.7076,Senior AI Engineer | 5.9 yrs exp | 8 AI/ML skills | response rate 81% | open to work | GitHub score 58 | notice 90d | semantic score 0.7076
+CAND_0096209,25,0.7072,ML Engineer | 4.2 yrs exp | 6 AI/ML skills | response rate 90% | open to work | notice 90d | semantic score 0.7072
+CAND_0061265,26,0.7070,Recommendation Systems Engineer | 6.6 yrs exp | 6 AI/ML skills | response rate 94% | open to work | GitHub score 80 | notice 120d | semantic score 0.7070
+CAND_0018722,27,0.7045,Recommendation Systems Engineer | 6.6 yrs exp | 5 AI/ML skills | response rate 79% | open to work | GitHub score 94 | notice 90d | semantic score 0.7045
+CAND_0039838,28,0.7045,Recommendation Systems Engineer | 4.9 yrs exp | 13 AI/ML skills | response rate 80% | open to work | GitHub score 36 | notice 90d | semantic score 0.7045
+CAND_0013536,29,0.7039,Applied ML Engineer | 14.1 yrs exp | 9 AI/ML skills | response rate 87% | open to work | GitHub score 52 | notice 90d | semantic score 0.7039
+CAND_0074225,30,0.7027,Machine Learning Engineer | 4.3 yrs exp | 7 AI/ML skills | response rate 91% | open to work | GitHub score 54 | notice 120d | semantic score 0.7027
+CAND_0065195,31,0.7026,Search Engineer | 5.1 yrs exp | 7 AI/ML skills | response rate 80% | open to work | GitHub score 87 | notice 45d | semantic score 0.7026
+CAND_0099806,32,0.7024,AI Engineer | 4.6 yrs exp | 7 AI/ML skills | response rate 76% | open to work | GitHub score 87 | notice 30d | semantic score 0.7024
+CAND_0010257,33,0.7016,Senior Data Scientist | 6.5 yrs exp | 6 AI/ML skills | response rate 72% | open to work | GitHub score 46 | notice 120d | semantic score 0.7016
+CAND_0061257,34,0.7009,Staff Machine Learning Engineer | 8.0 yrs exp | 5 AI/ML skills | response rate 87% | open to work | GitHub score 45 | notice 30d | semantic score 0.7009
+CAND_0093547,35,0.7007,Senior Machine Learning Engineer | 2.9 yrs exp | 9 AI/ML skills | response rate 75% | GitHub score 60 | notice 60d | semantic score 0.7007
+CAND_0001218,36,0.6971,AI Specialist | 6.4 yrs exp | 8 AI/ML skills | response rate 82% | open to work | notice 90d | semantic score 0.6971
+CAND_0044883,37,0.6963,AI Engineer | 6.3 yrs exp | 9 AI/ML skills | response rate 84% | GitHub score 70 | notice 90d | semantic score 0.6963
+CAND_0044890,38,0.6963,AI Research Engineer | 5.0 yrs exp | 4 AI/ML skills | response rate 79% | open to work | GitHub score 66 | notice 90d | semantic score 0.6963
+CAND_0084819,39,0.6943,Search Engineer | 4.5 yrs exp | 10 AI/ML skills | response rate 74% | open to work | GitHub score 56 | notice 120d | semantic score 0.6943
+CAND_0010685,40,0.6941,NLP Engineer | 6.7 yrs exp | 4 AI/ML skills | response rate 83% | open to work | notice 30d | semantic score 0.6941
+CAND_0077067,41,0.6922,AI Specialist | 5.4 yrs exp | 5 AI/ML skills | response rate 83% | open to work | GitHub score 25 | notice 90d | semantic score 0.6922
+CAND_0036184,42,0.6909,Recommendation Systems Engineer | 6.0 yrs exp | 9 AI/ML skills | response rate 90% | open to work | GitHub score 43 | notice 30d | semantic score 0.6909
+CAND_0069905,43,0.6908,Applied ML Engineer | 6.6 yrs exp | 9 AI/ML skills | response rate 78% | open to work | GitHub score 45 | notice 90d | semantic score 0.6908
+CAND_0073883,44,0.6883,AI Specialist | 5.3 yrs exp | 6 AI/ML skills | response rate 92% | open to work | GitHub score 66 | notice 90d | semantic score 0.6883
+CAND_0010770,45,0.6879,Recommendation Systems Engineer | 15.2 yrs exp | 7 AI/ML skills | response rate 73% | open to work | notice 30d | semantic score 0.6879
+CAND_0037160,46,0.6879,Data Scientist | 6.0 yrs exp | 10 AI/ML skills | response rate 74% | open to work | GitHub score 28 | notice 30d | semantic score 0.6879
+CAND_0081053,47,0.6876,NLP Engineer | 5.4 yrs exp | 8 AI/ML skills | response rate 83% | open to work | GitHub score 78 | notice 90d | semantic score 0.6876
+CAND_0064904,48,0.6845,AI Engineer | 4.9 yrs exp | 8 AI/ML skills | response rate 78% | open to work | GitHub score 59 | notice 90d | semantic score 0.6845
+CAND_0041918,49,0.6836,AI Specialist | 5.7 yrs exp | 6 AI/ML skills | response rate 87% | open to work | notice 90d | semantic score 0.6836
+CAND_0020708,50,0.6824,Search Engineer | 4.2 yrs exp | 7 AI/ML skills | response rate 84% | open to work | GitHub score 84 | notice 30d | semantic score 0.6824
+CAND_0014440,51,0.6819,Recommendation Systems Engineer | 6.4 yrs exp | 4 AI/ML skills | response rate 64% | open to work | GitHub score 90 | notice 60d | semantic score 0.6819
+CAND_0054318,52,0.6815,AI Research Engineer | 3.5 yrs exp | 9 AI/ML skills | response rate 87% | open to work | GitHub score 22 | notice 60d | semantic score 0.6815
+CAND_0047542,53,0.6813,Senior Software Engineer (ML) | 5.0 yrs exp | 7 AI/ML skills | response rate 75% | open to work | GitHub score 15 | notice 45d | semantic score 0.6813
+CAND_0007596,54,0.6805,Junior ML Engineer | 4.4 yrs exp | 7 AI/ML skills | response rate 86% | open to work | notice 45d | semantic score 0.6805
+CAND_0006538,55,0.6803,AI Specialist | 5.7 yrs exp | 4 AI/ML skills | response rate 86% | open to work | notice 60d | semantic score 0.6803
+CAND_0024878,56,0.6802,AI Specialist | 5.7 yrs exp | 4 AI/ML skills | response rate 84% | open to work | GitHub score 25 | notice 60d | semantic score 0.6802
+CAND_0035879,57,0.6798,AI Research Engineer | 4.5 yrs exp | 5 AI/ML skills | response rate 82% | open to work | GitHub score 84 | notice 120d | semantic score 0.6798
+CAND_0052328,58,0.6796,Recommendation Systems Engineer | 6.5 yrs exp | 10 AI/ML skills | response rate 79% | open to work | GitHub score 78 | notice 30d | semantic score 0.6796
+CAND_0064326,59,0.6782,Search Engineer | 7.6 yrs exp | 8 AI/ML skills | response rate 94% | open to work | GitHub score 61 | notice 45d | semantic score 0.6782
+CAND_0028527,60,0.6781,AI Specialist | 5.4 yrs exp | 7 AI/ML skills | response rate 90% | open to work | GitHub score 13 | notice 90d | semantic score 0.6781
+CAND_0030784,61,0.6765,Data Scientist | 4.4 yrs exp | 8 AI/ML skills | response rate 90% | open to work | GitHub score 32 | notice 90d | semantic score 0.6765
+CAND_0052682,62,0.6763,NLP Engineer | 6.6 yrs exp | 8 AI/ML skills | response rate 88% | open to work | GitHub score 72 | notice 30d | semantic score 0.6763
+CAND_0005260,63,0.6760,Senior NLP Engineer | 5.2 yrs exp | 12 AI/ML skills | response rate 86% | notice 60d | semantic score 0.6760
+CAND_0099965,64,0.6758,Junior ML Engineer | 4.6 yrs exp | 4 AI/ML skills | response rate 88% | open to work | GitHub score 43 | notice 120d | semantic score 0.6758
+CAND_0006418,65,0.6750,Machine Learning Engineer | 5.7 yrs exp | 5 AI/ML skills | response rate 92% | open to work | GitHub score 60 | notice 60d | semantic score 0.6750
+CAND_0091534,66,0.6748,AI Engineer | 16.6 yrs exp | 4 AI/ML skills | response rate 84% | GitHub score 66 | notice 30d | semantic score 0.6748
+CAND_0017960,67,0.6746,Recommendation Systems Engineer | 7.7 yrs exp | 7 AI/ML skills | response rate 72% | open to work | GitHub score 92 | notice 60d | semantic score 0.6746
+CAND_0079064,68,0.6743,Senior Data Scientist | 5.2 yrs exp | 5 AI/ML skills | response rate 91% | open to work | GitHub score 27 | notice 120d | semantic score 0.6743
+CAND_0094165,69,0.6743,AI Research Engineer | 5.8 yrs exp | 4 AI/ML skills | response rate 78% | open to work | GitHub score 82 | notice 90d | semantic score 0.6743
+CAND_0033179,70,0.6739,AI Research Engineer | 6.9 yrs exp | 9 AI/ML skills | response rate 84% | open to work | notice 30d | semantic score 0.6739
+CAND_0038099,71,0.6737,Junior ML Engineer | 5.4 yrs exp | 4 AI/ML skills | response rate 81% | open to work | GitHub score 23 | notice 90d | semantic score 0.6737
+CAND_0000031,72,0.6731,Recommendation Systems Engineer | 6.0 yrs exp | 10 AI/ML skills | response rate 91% | open to work | GitHub score 33 | notice 60d | semantic score 0.6731
+CAND_0087744,73,0.6723,Senior Software Engineer (ML) | 3.9 yrs exp | 7 AI/ML skills | response rate 88% | open to work | GitHub score 29 | notice 30d | semantic score 0.6723
+CAND_0058688,74,0.6721,AI Engineer | 6.7 yrs exp | 8 AI/ML skills | response rate 74% | open to work | GitHub score 39 | notice 15d | semantic score 0.6721
+CAND_0085335,75,0.6710,ML Engineer | 3.1 yrs exp | 4 AI/ML skills | response rate 83% | open to work | GitHub score 40 | notice 120d | semantic score 0.6710
+CAND_0052335,76,0.6708,Applied ML Engineer | 6.4 yrs exp | 6 AI/ML skills | response rate 79% | open to work | GitHub score 21 | notice 60d | semantic score 0.6708
+CAND_0008425,77,0.6698,Senior NLP Engineer | 7.8 yrs exp | 9 AI/ML skills | response rate 66% | open to work | GitHub score 53 | notice 90d | semantic score 0.6698
+CAND_0043381,78,0.6691,AI Research Engineer | 3.6 yrs exp | 3 AI/ML skills | response rate 78% | open to work | GitHub score 71 | notice 45d | semantic score 0.6691
+CAND_0018499,79,0.6682,Senior Machine Learning Engineer | 7.2 yrs exp | 5 AI/ML skills | response rate 61% | open to work | GitHub score 95 | notice 15d | semantic score 0.6682
+CAND_0090300,80,0.6679,AI Research Engineer | 5.3 yrs exp | 5 AI/ML skills | response rate 94% | open to work | notice 120d | semantic score 0.6679
+CAND_0093912,81,0.6677,Senior Data Scientist | 5.3 yrs exp | 2 AI/ML skills | response rate 66% | open to work | GitHub score 82 | notice 30d | semantic score 0.6677
+CAND_0081686,82,0.6669,Search Engineer | 6.0 yrs exp | 7 AI/ML skills | response rate 91% | GitHub score 46 | notice 60d | semantic score 0.6669
+CAND_0068040,83,0.6666,AI Specialist | 4.1 yrs exp | 3 AI/ML skills | response rate 90% | open to work | notice 90d | semantic score 0.6666
+CAND_0074735,84,0.6662,Applied ML Engineer | 5.5 yrs exp | 6 AI/ML skills | response rate 77% | open to work | GitHub score 88 | notice 90d | semantic score 0.6662
+CAND_0042441,85,0.6655,AI Research Engineer | 4.1 yrs exp | 6 AI/ML skills | response rate 72% | open to work | notice 90d | semantic score 0.6655
+CAND_0024147,86,0.6654,ML Engineer | 5.9 yrs exp | 3 AI/ML skills | response rate 84% | open to work | GitHub score 70 | notice 60d | semantic score 0.6654
+CAND_0078492,87,0.6650,Recommendation Systems Engineer | 5.1 yrs exp | 5 AI/ML skills | response rate 70% | open to work | GitHub score 35 | notice 30d | semantic score 0.6650
+CAND_0078042,88,0.6649,Applied ML Engineer | 4.7 yrs exp | 6 AI/ML skills | response rate 91% | GitHub score 84 | notice 30d | semantic score 0.6649
+CAND_0038821,89,0.6647,AI Specialist | 4.3 yrs exp | 6 AI/ML skills | response rate 81% | open to work | notice 120d | semantic score 0.6647
+CAND_0054546,90,0.6645,AI Research Engineer | 4.9 yrs exp | 5 AI/ML skills | response rate 92% | open to work | GitHub score 75 | notice 90d | semantic score 0.6645
+CAND_0011327,91,0.6644,AI Research Engineer | 6.3 yrs exp | 4 AI/ML skills | response rate 79% | open to work | notice 60d | semantic score 0.6644
+CAND_0021410,92,0.6644,Junior ML Engineer | 4.0 yrs exp | 4 AI/ML skills | response rate 80% | open to work | notice 60d | semantic score 0.6644
+CAND_0080465,93,0.6643,ML Engineer | 4.2 yrs exp | 7 AI/ML skills | response rate 83% | open to work | GitHub score 81 | notice 90d | semantic score 0.6643
+CAND_0018549,94,0.6639,Recommendation Systems Engineer | 6.8 yrs exp | 5 AI/ML skills | response rate 73% | open to work | GitHub score 56 | notice 60d | semantic score 0.6639
+CAND_0070525,95,0.6636,Senior Software Engineer (ML) | 5.4 yrs exp | 4 AI/ML skills | response rate 93% | open to work | GitHub score 18 | notice 45d | semantic score 0.6636
+CAND_0014909,96,0.6631,Computer Vision Engineer | 4.8 yrs exp | 5 AI/ML skills | response rate 76% | open to work | GitHub score 68 | notice 120d | semantic score 0.6631
+CAND_0086893,97,0.6628,ML Engineer | 3.9 yrs exp | 6 AI/ML skills | response rate 90% | open to work | notice 90d | semantic score 0.6628
+CAND_0089444,98,0.6619,AI Specialist | 4.5 yrs exp | 0 AI/ML skills | response rate 88% | open to work | GitHub score 23 | notice 90d | semantic score 0.6619
+CAND_0075249,99,0.6612,Applied ML Engineer | 6.2 yrs exp | 4 AI/ML skills | response rate 82% | open to work | GitHub score 37 | notice 45d | semantic score 0.6612
+CAND_0052744,100,0.6610,Senior Software Engineer (ML) | 4.9 yrs exp | 4 AI/ML skills | response rate 79% | open to work | GitHub score 41 | notice 90d | semantic score 0.6610
