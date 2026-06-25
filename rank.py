@@ -332,9 +332,65 @@ def _behavioral_modifier(c: dict) -> float:
 
 
 # ---------------------------------------------------------------------------
+# MULTIPROCESSING HELPERS (Windows compatible, CPU-core scaling)
+# ---------------------------------------------------------------------------
+import concurrent.futures
+
+_worker_model = None
+
+def init_worker():
+    global _worker_model
+    import torch
+    from sentence_transformers import SentenceTransformer
+    # Restrict worker to 1 thread to prevent OS thread thrashing
+    torch.set_num_threads(1)
+    _worker_model = SentenceTransformer(MODEL_NAME, device="cpu")
+    _worker_model.max_seq_length = 64
+
+def process_chunk(chunk_data: list, jd_vec: list) -> list:
+    global _worker_model
+    if _worker_model is None:
+        init_worker()
+        
+    cand_texts = [build_candidate_text(c) for c in chunk_data]
+    
+    import torch
+    with torch.inference_mode():
+        cand_embeddings = _worker_model.encode(
+            cand_texts,
+            batch_size=len(cand_texts),
+            normalize_embeddings=True,
+            convert_to_tensor=False,
+            show_progress_bar=False
+        )
+    cand_vecs = cand_embeddings.tolist()
+    
+    local_heap = []
+    for i, cand in enumerate(chunk_data):
+        score = fast_dot_product(jd_vec, cand_vecs[i]) * _behavioral_modifier(cand)
+        cand_id = cand.get("candidate_id", "")
+        if len(local_heap) < TOP_K:
+            heapq.heappush(local_heap, (score, cand_id, cand))
+        elif score > local_heap[0][0]:
+            heapq.heapreplace(local_heap, (score, cand_id, cand))
+            
+    return local_heap
+
+def iter_chunks(path: str, chunk_size: int = 2000) -> Generator[list, None, None]:
+    chunk = []
+    for c in iter_candidates(path):
+        chunk.append(c)
+        if len(chunk) >= chunk_size:
+            yield chunk
+            chunk = []
+    if chunk:
+        yield chunk
+
+
+# ---------------------------------------------------------------------------
 # MAIN RANKING PIPELINE
 # ---------------------------------------------------------------------------
-def rank_candidates(candidates_path: str, output_path: str) -> None:
+def rank_candidates(candidates_path: str, output_path: str, parallel: bool = False) -> None:
     """
     Full ranking pipeline:
       1. Load the local embedding model (pre-downloaded — offline).
@@ -354,14 +410,6 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     # local_files_only=True enforces offline mode — will fail fast if model not cached
     model = SentenceTransformer(MODEL_NAME, device="cpu")
     torch.set_num_threads(10)
-    model.max_seq_length = 64
-    print(f"      Model loaded in {time.time() - t_start:.1f}s")
-
-    # ------------------------------------------------------------------
-    # Step 2: Embed the Job Description
-    # ------------------------------------------------------------------
-    print("[2/5] Embedding Job Description...")
-    
     # Read dynamic JD from API if it exists, otherwise use fallback
     jd_text = JOB_DESCRIPTION
     dynamic_jd_path = "data/current_jd.txt"
@@ -374,96 +422,140 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
                     print("      Loaded dynamic JD from data/current_jd.txt")
         except Exception as e:
             print(f"      [WARN] Failed to read {dynamic_jd_path}: {e}")
-    
-    with torch.inference_mode():
-        jd_embedding = model.encode(jd_text, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
-    jd_vec = jd_embedding.tolist()   # convert numpy array → plain Python list
-    print(f"      JD vector: {len(jd_vec)} dimensions")
 
-    # ------------------------------------------------------------------
-    # Step 3 + 4: Stream candidates, embed, compute similarity, track top-K
-    # ------------------------------------------------------------------
-    print(f"[3/5] Streaming and ranking candidates in batches from: {candidates_path}")
-    print("      Using batch_size=64 for optimal CPU throughput within RAM limits.")
-
-    # Min-heap: stores (score, candidate_id, candidate_dict)
-    # We use a min-heap of size K so we efficiently track the top-K
-    # without sorting the full 50K candidates.
-    heap: list = []   # (score, candidate_id, candidate_dict)
-    processed = 0
-    skipped = 0
-
-    # Helper to yield chunks
-    def iter_candidate_batches(path: str, batch_size: int = 64):
-        batch = []
-        for c in iter_candidates(path):
-            batch.append(c)
-            if len(batch) >= batch_size:
-                yield batch
-                batch = []
-        if batch:
-            yield batch
-
-    for batch in iter_candidate_batches(candidates_path, batch_size=64):
-        valid_cands = []
-        cand_texts = []
-
-        for cand in batch:
-            candidate_id = cand.get("candidate_id", "")
-            if not candidate_id:
-                skipped += 1
-                continue
-
-            cand_text = build_candidate_text(cand)
-            if not cand_text.strip():
-                skipped += 1
-                continue
-
-            valid_cands.append(cand)
-            cand_texts.append(cand_text)
-
-        if not valid_cands:
-            continue
-
-        # Embed candidate batch in one go using batch_size=64
+    if parallel:
+        print("[1/5] Loading embedding model in parent process (Job Description)...")
+        model = SentenceTransformer(MODEL_NAME, device="cpu")
+        model.max_seq_length = 64
         with torch.inference_mode():
-            cand_embeddings = model.encode(cand_texts, batch_size=64, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
-        cand_vecs = cand_embeddings.tolist()
+            jd_embedding = model.encode(jd_text, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
+        jd_vec = jd_embedding.tolist()
+        print(f"      JD vector: {len(jd_vec)} dimensions")
 
-        for i, cand in enumerate(valid_cands):
-            candidate_id = cand.get("candidate_id", "")
-            cand_vec = cand_vecs[i]
+        print("[2/5] Initializing ProcessPoolExecutor for CPU-core scaling...")
+        CORES_AVAILABLE = os.cpu_count() or 4
+        WORKER_CORES = min(4, max(1, CORES_AVAILABLE - 1))
+        print(f"      Logical cores: {CORES_AVAILABLE} | Worker pool: {WORKER_CORES} workers (RAM Safe Capped)")
 
-            # RULE 3: Cosine similarity via dot product (no NumPy)
-            semantic_score = fast_dot_product(jd_vec, cand_vec)
+        combined_heap = []
+        t_pool_start = time.time()
+        print(f"[3/5] Submitting chunks to workers and executing in parallel...")
+        with concurrent.futures.ProcessPoolExecutor(max_workers=WORKER_CORES, initializer=init_worker) as executor:
+            futures = []
+            for chunk in iter_chunks(candidates_path, chunk_size=2000):
+                futures.append(executor.submit(process_chunk, chunk, jd_vec))
+            
+            for fut in concurrent.futures.as_completed(futures):
+                local_heap = fut.result()
+                for item in local_heap:
+                    if len(combined_heap) < TOP_K:
+                        heapq.heappush(combined_heap, item)
+                    elif item[0] > combined_heap[0][0]:
+                        heapq.heapreplace(combined_heap, item)
+        print(f"[4/5] Parallel execution complete in {time.time() - t_pool_start:.1f}s.")
+        top_candidates = sorted(combined_heap, key=lambda x: (-x[0], x[1]))
+    else:
+        # ------------------------------------------------------------------
+        # Step 1: Load the embedding model (local, no network call)
+        # ------------------------------------------------------------------
+        print(f"[1/5] Loading embedding model: {MODEL_NAME}")
+        print("      (First run may take ~30s to load from disk. Subsequent runs are faster.)")
 
-            # --- Behavioral Signal Modifier ---
-            # The JD explicitly warns: down-weight candidates who are
-            # "perfect on paper" but behaviorally unavailable.
-            # This multiplier adjusts the final score based on platform signals.
-            score = semantic_score * _behavioral_modifier(cand)
+        # local_files_only=True enforces offline mode — will fail fast if model not cached
+        model = SentenceTransformer(MODEL_NAME, device="cpu")
+        torch.set_num_threads(10)
+        model.max_seq_length = 64
+        print(f"      Model loaded in {time.time() - t_start:.1f}s")
 
-            # Maintain top-K min-heap
-            if len(heap) < TOP_K:
-                heapq.heappush(heap, (score, candidate_id, cand))
-            elif score > heap[0][0]:
-                heapq.heapreplace(heap, (score, candidate_id, cand))
+        # ------------------------------------------------------------------
+        # Step 2: Embed the Job Description
+        # ------------------------------------------------------------------
+        print("[2/5] Embedding Job Description...")
+        with torch.inference_mode():
+            jd_embedding = model.encode(jd_text, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
+        jd_vec = jd_embedding.tolist()   # convert numpy array → plain Python list
+        print(f"      JD vector: {len(jd_vec)} dimensions")
 
-        # Progress reporting
-        prev_processed = processed
-        processed += len(valid_cands)
-        
-        # Print if we crossed a 1000 boundary
-        if prev_processed // 1000 < processed // 1000:
-            elapsed = time.time() - t_start
-            best_score = heap[0][0] if heap else 0.0
-            print(f"      Processed {processed:,} candidates | "
-                  f"Elapsed: {elapsed:.0f}s | "
-                  f"Heap min score: {best_score:.4f}")
+        # ------------------------------------------------------------------
+        # Step 3 + 4: Stream candidates, embed, compute similarity, track top-K
+        # ------------------------------------------------------------------
+        print(f"[3/5] Streaming and ranking candidates in batches from: {candidates_path}")
+        print("      Using batch_size=64 for optimal CPU throughput within RAM limits.")
 
-    print(f"\n[4/5] Ranking complete.")
-    print(f"      Processed: {processed:,} | Skipped: {skipped} | "
-          f"Time: {time.time() - t_start:.1f}s")
+        heap: list = []   # (score, candidate_id, candidate_dict)
+        processed = 0
+        skipped = 0
+
+        # Helper to yield chunks
+        def iter_candidate_batches(path: str, batch_size: int = 64):
+            batch = []
+            for c in iter_candidates(path):
+                batch.append(c)
+                if len(batch) >= batch_size:
+                    yield batch
+                    batch = []
+            if batch:
+                yield batch
+
+        for batch in iter_candidate_batches(candidates_path, batch_size=64):
+            valid_cands = []
+            cand_texts = []
+
+            for cand in batch:
+                candidate_id = cand.get("candidate_id", "")
+                if not candidate_id:
+                    skipped += 1
+                    continue
+
+                cand_text = build_candidate_text(cand)
+                if not cand_text.strip():
+                    skipped += 1
+                    continue
+
+                valid_cands.append(cand)
+                cand_texts.append(cand_text)
+
+            if not valid_cands:
+                continue
+
+            # Embed candidate batch in one go using batch_size=64
+            with torch.inference_mode():
+                cand_embeddings = model.encode(cand_texts, batch_size=64, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
+            cand_vecs = cand_embeddings.tolist()
+
+            for i, cand in enumerate(valid_cands):
+                candidate_id = cand.get("candidate_id", "")
+                cand_vec = cand_vecs[i]
+
+                # RULE 3: Cosine similarity via dot product (no NumPy)
+                semantic_score = fast_dot_product(jd_vec, cand_vec)
+
+                # --- Behavioral Signal Modifier ---
+                score = semantic_score * _behavioral_modifier(cand)
+
+                # Maintain top-K min-heap
+                if len(heap) < TOP_K:
+                    heapq.heappush(heap, (score, candidate_id, cand))
+                elif score > heap[0][0]:
+                    heapq.heapreplace(heap, (score, candidate_id, cand))
+
+            # Progress reporting
+            prev_processed = processed
+            processed += len(valid_cands)
+            
+            # Print if we crossed a 1000 boundary
+            if prev_processed // 1000 < processed // 1000:
+                elapsed = time.time() - t_start
+                best_score = heap[0][0] if heap else 0.0
+                print(f"      Processed {processed:,} candidates | "
+                      f"Elapsed: {elapsed:.0f}s | "
+                      f"Heap min score: {best_score:.4f}")
+
+        print(f"\n[4/5] Ranking complete.")
+        print(f"      Processed: {processed:,} | Skipped: {skipped} | "
+              f"Time: {time.time() - t_start:.1f}s")
+
+        top_candidates = sorted(heap, key=lambda x: (-x[0], x[1]))
 
     # ------------------------------------------------------------------
     # Step 5: Sort and write submission.csv
@@ -471,7 +563,7 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     print(f"[5/5] Writing submission to: {output_path}")
 
     # Sort: descending full-precision score, then ascending candidate_id for tie-breaking.
-    top_candidates = sorted(heap, key=lambda x: (-x[0], x[1]))
+    top_candidates = sorted(top_candidates, key=lambda x: (-x[0], x[1]))
 
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
@@ -538,6 +630,11 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Output path for submission CSV (e.g., ./submission.csv)"
     )
+    parser.add_argument(
+        "--parallel",
+        action="store_true",
+        help="Enable multiprocessing process pool execution (CPU-core scaling)"
+    )
     return parser.parse_args()
 
 
@@ -551,4 +648,5 @@ if __name__ == "__main__":
     rank_candidates(
         candidates_path=args.candidates,
         output_path=args.out,
+        parallel=args.parallel,
     )
