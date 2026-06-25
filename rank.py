@@ -33,8 +33,9 @@ from typing import Generator
 # ---------------------------------------------------------------------------
 try:
     from sentence_transformers import SentenceTransformer
+    import torch
 except ImportError:
-    print("[ERROR] sentence-transformers not installed. Run: pip install sentence-transformers")
+    print("[ERROR] sentence-transformers or torch not installed. Run: pip install sentence-transformers torch")
     sys.exit(1)
 
 
@@ -126,6 +127,14 @@ Implement rigorous network isolation: VPC Links, IMDSv2 tokenization, zero-trust
 # ---------------------------------------------------------------------------
 # RULE 3: COSINE SIMILARITY — RAW PYTHON LOOPS ONLY (NO NUMPY)
 # ---------------------------------------------------------------------------
+def fast_dot_product(vec_a: list[float], vec_b: list[float]) -> float:
+    """
+    Because vec_a and vec_b are L2 Normalized, their dot product IS their cosine similarity.
+    No square roots, no division, massive CPU cycle savings.
+    """
+    return sum(a * b for a, b in zip(vec_a, vec_b))
+
+
 def cosine_similarity(vec_a: list, vec_b: list) -> float:
     """
     Compute cosine similarity between two equal-length float vectors.
@@ -171,80 +180,43 @@ def iter_candidates(path: str) -> Generator[dict, None, None]:
 def build_candidate_text(c: dict) -> str:
     """
     Build a flat text representation of a candidate profile.
-    The richer and more accurate this text, the better the semantic match.
+    Optimized for high-throughput CPU inference: super-compact text.
     """
     parts = []
     profile = c.get("profile", {})
 
-    # --- Core identity ---
     title = profile.get("current_title", "")
-    summary = profile.get("summary", "")
     headline = profile.get("headline", "")
     yoe = profile.get("years_of_experience", 0)
-    industry = profile.get("current_industry", "")
 
     if title:
         parts.append(f"Current Role: {title}")
     if headline:
         parts.append(f"Headline: {headline}")
-    if summary:
-        parts.append(f"Summary: {summary}")
     if yoe:
         parts.append(f"Years of Experience: {yoe}")
-    if industry:
-        parts.append(f"Industry: {industry}")
 
-    # --- Skills (most semantically rich signal) ---
+    # Skills (top 15)
     skills = c.get("skills", [])
     if skills:
-        # Sort by proficiency weight then endorsements
         proficiency_order = {"expert": 4, "advanced": 3, "intermediate": 2, "beginner": 1}
         skills_sorted = sorted(
             skills,
             key=lambda s: (proficiency_order.get(s.get("proficiency", ""), 0), s.get("endorsements", 0)),
             reverse=True
         )
-        skill_names = [s["name"] for s in skills_sorted if s.get("name")]
+        skill_names = [s["name"] for s in skills_sorted[:15] if s.get("name")]
         if skill_names:
             parts.append("Skills: " + ", ".join(skill_names))
 
-    # --- Skill assessment scores (verified platform scores) ---
-    signals = c.get("redrob_signals", {})
-    assessment_scores = signals.get("skill_assessment_scores", {})
-    if assessment_scores:
-        top_assessed = sorted(assessment_scores.items(), key=lambda x: x[1], reverse=True)[:5]
-        assessed_text = ", ".join(f"{k} ({v:.0f}/100)" for k, v in top_assessed)
-        parts.append(f"Verified Skill Assessments: {assessed_text}")
-
-    # --- Career history ---
+    # Past Roles titles
     career = c.get("career_history", [])
-    for job in career[:4]:  # Top 4 most recent roles
-        job_title = job.get("title", "")
-        job_company = job.get("company", "")
-        job_desc = job.get("description", "")
-        job_industry = job.get("industry", "")
-        duration = job.get("duration_months", 0)
-        if job_title:
-            parts.append(f"Role: {job_title} at {job_company} ({job_industry}, {duration} months). {job_desc}")
+    job_titles = [job.get("title", "") for job in career[:3] if job.get("title")]
+    if job_titles:
+        parts.append("Past Roles: " + ", ".join(job_titles))
 
-    # --- Education ---
-    education = c.get("education", [])
-    for edu in education[:2]:
-        degree = edu.get("degree", "")
-        field = edu.get("field_of_study", "")
-        institution = edu.get("institution", "")
-        tier = edu.get("tier", "")
-        if degree:
-            parts.append(f"Education: {degree} in {field} from {institution} ({tier})")
-
-    # --- Certifications ---
-    certs = c.get("certifications", [])
-    if certs:
-        cert_names = [c_item.get("name", "") for c_item in certs[:5] if c_item.get("name")]
-        if cert_names:
-            parts.append("Certifications: " + ", ".join(cert_names))
-
-    return "\n".join(parts)
+    full_text = "\n".join(parts)
+    return full_text[:400]
 
 
 # ---------------------------------------------------------------------------
@@ -381,6 +353,8 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
 
     # local_files_only=True enforces offline mode — will fail fast if model not cached
     model = SentenceTransformer(MODEL_NAME, device="cpu")
+    torch.set_num_threads(10)
+    model.max_seq_length = 64
     print(f"      Model loaded in {time.time() - t_start:.1f}s")
 
     # ------------------------------------------------------------------
@@ -401,7 +375,8 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
         except Exception as e:
             print(f"      [WARN] Failed to read {dynamic_jd_path}: {e}")
     
-    jd_embedding = model.encode(jd_text, convert_to_tensor=False, show_progress_bar=False)
+    with torch.inference_mode():
+        jd_embedding = model.encode(jd_text, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
     jd_vec = jd_embedding.tolist()   # convert numpy array → plain Python list
     print(f"      JD vector: {len(jd_vec)} dimensions")
 
@@ -409,7 +384,7 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     # Step 3 + 4: Stream candidates, embed, compute similarity, track top-K
     # ------------------------------------------------------------------
     print(f"[3/5] Streaming and ranking candidates in batches from: {candidates_path}")
-    print("      Using batch_size=32 for optimal CPU throughput within RAM limits.")
+    print("      Using batch_size=64 for optimal CPU throughput within RAM limits.")
 
     # Min-heap: stores (score, candidate_id, candidate_dict)
     # We use a min-heap of size K so we efficiently track the top-K
@@ -419,7 +394,7 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     skipped = 0
 
     # Helper to yield chunks
-    def iter_candidate_batches(path: str, batch_size: int = 32):
+    def iter_candidate_batches(path: str, batch_size: int = 64):
         batch = []
         for c in iter_candidates(path):
             batch.append(c)
@@ -429,7 +404,7 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
         if batch:
             yield batch
 
-    for batch in iter_candidate_batches(candidates_path, batch_size=32):
+    for batch in iter_candidate_batches(candidates_path, batch_size=64):
         valid_cands = []
         cand_texts = []
 
@@ -450,16 +425,17 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
         if not valid_cands:
             continue
 
-        # Embed candidate batch in one go using batch_size=32
-        cand_embeddings = model.encode(cand_texts, batch_size=32, convert_to_tensor=False, show_progress_bar=False)
+        # Embed candidate batch in one go using batch_size=64
+        with torch.inference_mode():
+            cand_embeddings = model.encode(cand_texts, batch_size=64, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
         cand_vecs = cand_embeddings.tolist()
 
         for i, cand in enumerate(valid_cands):
             candidate_id = cand.get("candidate_id", "")
             cand_vec = cand_vecs[i]
 
-            # RULE 3: Cosine similarity via raw Python loops (no NumPy)
-            semantic_score = cosine_similarity(jd_vec, cand_vec)
+            # RULE 3: Cosine similarity via dot product (no NumPy)
+            semantic_score = fast_dot_product(jd_vec, cand_vec)
 
             # --- Behavioral Signal Modifier ---
             # The JD explicitly warns: down-weight candidates who are
