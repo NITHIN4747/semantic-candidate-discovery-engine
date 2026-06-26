@@ -1,0 +1,23 @@
+name: SRE Zero-Trust Pipeline
+on:
+  push:
+    branches: [ "main", "active" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Enforce Formatting & Linting
+      run: |
+        pip install flake8
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    - name: Verify SRE Constraints (No NumPy)
+      run: |
+        ! grep -rE "^import numpy|^from numpy" --include="*.py" .

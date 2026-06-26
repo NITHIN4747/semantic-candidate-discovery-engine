@@ -9,7 +9,7 @@ SANDBOX RULES ENFORCED IN THIS FILE:
   [1] Runs fully offline — zero network calls.
   [2] Streams candidates.jsonl line-by-line — never loads full 487MB into RAM.
   [3] Cosine Similarity computed using raw Python for-loops + math stdlib only.
-      DO NOT import numpy / scipy / sklearn for core ranking math.
+      DO NOT use numpy / scipy / sklearn for core ranking math.
   [4] Completes in ≤ 5 minutes on CPU-only, 16 GB RAM.
   [5] Produces exactly 100 ranked rows in submission.csv.
 
@@ -33,8 +33,9 @@ from typing import Generator
 # ---------------------------------------------------------------------------
 try:
     from sentence_transformers import SentenceTransformer
+    import torch
 except ImportError:
-    print("[ERROR] sentence-transformers not installed. Run: pip install sentence-transformers")
+    print("[ERROR] sentence-transformers or torch not installed. Run: pip install sentence-transformers torch")
     sys.exit(1)
 
 
@@ -126,6 +127,14 @@ Implement rigorous network isolation: VPC Links, IMDSv2 tokenization, zero-trust
 # ---------------------------------------------------------------------------
 # RULE 3: COSINE SIMILARITY — RAW PYTHON LOOPS ONLY (NO NUMPY)
 # ---------------------------------------------------------------------------
+def fast_dot_product(vec_a: list[float], vec_b: list[float]) -> float:
+    """
+    Because vec_a and vec_b are L2 Normalized, their dot product IS their cosine similarity.
+    No square roots, no division, massive CPU cycle savings.
+    """
+    return sum(a * b for a, b in zip(vec_a, vec_b))
+
+
 def cosine_similarity(vec_a: list, vec_b: list) -> float:
     """
     Compute cosine similarity between two equal-length float vectors.
@@ -171,80 +180,43 @@ def iter_candidates(path: str) -> Generator[dict, None, None]:
 def build_candidate_text(c: dict) -> str:
     """
     Build a flat text representation of a candidate profile.
-    The richer and more accurate this text, the better the semantic match.
+    Optimized for high-throughput CPU inference: super-compact text.
     """
     parts = []
     profile = c.get("profile", {})
 
-    # --- Core identity ---
     title = profile.get("current_title", "")
-    summary = profile.get("summary", "")
     headline = profile.get("headline", "")
     yoe = profile.get("years_of_experience", 0)
-    industry = profile.get("current_industry", "")
 
     if title:
         parts.append(f"Current Role: {title}")
     if headline:
         parts.append(f"Headline: {headline}")
-    if summary:
-        parts.append(f"Summary: {summary}")
     if yoe:
         parts.append(f"Years of Experience: {yoe}")
-    if industry:
-        parts.append(f"Industry: {industry}")
 
-    # --- Skills (most semantically rich signal) ---
+    # Skills (top 15)
     skills = c.get("skills", [])
     if skills:
-        # Sort by proficiency weight then endorsements
         proficiency_order = {"expert": 4, "advanced": 3, "intermediate": 2, "beginner": 1}
         skills_sorted = sorted(
             skills,
             key=lambda s: (proficiency_order.get(s.get("proficiency", ""), 0), s.get("endorsements", 0)),
             reverse=True
         )
-        skill_names = [s["name"] for s in skills_sorted if s.get("name")]
+        skill_names = [s["name"] for s in skills_sorted[:15] if s.get("name")]
         if skill_names:
             parts.append("Skills: " + ", ".join(skill_names))
 
-    # --- Skill assessment scores (verified platform scores) ---
-    signals = c.get("redrob_signals", {})
-    assessment_scores = signals.get("skill_assessment_scores", {})
-    if assessment_scores:
-        top_assessed = sorted(assessment_scores.items(), key=lambda x: x[1], reverse=True)[:5]
-        assessed_text = ", ".join(f"{k} ({v:.0f}/100)" for k, v in top_assessed)
-        parts.append(f"Verified Skill Assessments: {assessed_text}")
-
-    # --- Career history ---
+    # Past Roles titles
     career = c.get("career_history", [])
-    for job in career[:4]:  # Top 4 most recent roles
-        job_title = job.get("title", "")
-        job_company = job.get("company", "")
-        job_desc = job.get("description", "")
-        job_industry = job.get("industry", "")
-        duration = job.get("duration_months", 0)
-        if job_title:
-            parts.append(f"Role: {job_title} at {job_company} ({job_industry}, {duration} months). {job_desc}")
+    job_titles = [job.get("title", "") for job in career[:3] if job.get("title")]
+    if job_titles:
+        parts.append("Past Roles: " + ", ".join(job_titles))
 
-    # --- Education ---
-    education = c.get("education", [])
-    for edu in education[:2]:
-        degree = edu.get("degree", "")
-        field = edu.get("field_of_study", "")
-        institution = edu.get("institution", "")
-        tier = edu.get("tier", "")
-        if degree:
-            parts.append(f"Education: {degree} in {field} from {institution} ({tier})")
-
-    # --- Certifications ---
-    certs = c.get("certifications", [])
-    if certs:
-        cert_names = [c_item.get("name", "") for c_item in certs[:5] if c_item.get("name")]
-        if cert_names:
-            parts.append("Certifications: " + ", ".join(cert_names))
-
-    return "\n".join(parts)
+    full_text = "\n".join(parts)
+    return full_text[:400]
 
 
 # ---------------------------------------------------------------------------
@@ -381,7 +353,23 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
 
     # local_files_only=True enforces offline mode — will fail fast if model not cached
     model = SentenceTransformer(MODEL_NAME, device="cpu")
-    print(f"      Model loaded in {time.time() - t_start:.1f}s")
+    torch.set_num_threads(10)
+    model.max_seq_length = 64
+
+    # --- INJECTION 1: Dynamic INT8 Quantization ---
+    # Forces PyTorch Linear layers to use AVX2/VNNI integer math on the CPU.
+    # We use legacy torch.quantization because torchao currently throws NotImplementedError
+    # for `aten._has_compatible_shallow_copy_type` inside SentenceTransformer.encode().
+    print("      Applying Dynamic INT8 Quantization to model Linear layers...")
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        model[0].auto_model = torch.quantization.quantize_dynamic(
+            model[0].auto_model,
+            {torch.nn.Linear},
+            dtype=torch.qint8
+        )
+    print(f"      Model loaded + quantized in {time.time() - t_start:.1f}s")
 
     # ------------------------------------------------------------------
     # Step 2: Embed the Job Description
@@ -401,92 +389,135 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
         except Exception as e:
             print(f"      [WARN] Failed to read {dynamic_jd_path}: {e}")
     
-    jd_embedding = model.encode(jd_text, convert_to_tensor=False, show_progress_bar=False)
+    with torch.inference_mode():
+        jd_embedding = model.encode(jd_text, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
     jd_vec = jd_embedding.tolist()   # convert numpy array → plain Python list
     print(f"      JD vector: {len(jd_vec)} dimensions")
 
     # ------------------------------------------------------------------
-    # Step 3 + 4: Stream candidates, embed, compute similarity, track top-K
+    # Step 3: L1 Gatekeeper + L2 Lexical Scorer
     # ------------------------------------------------------------------
-    print(f"[3/5] Streaming and ranking candidates in batches from: {candidates_path}")
-    print("      Using batch_size=32 for optimal CPU throughput within RAM limits.")
+    print(f"[3/5] Funnel Stage 1 & 2: L1 Gatekeeper + L2 Lexical Reranker")
+    print(f"      Scanning candidates from: {candidates_path}")
 
-    # Min-heap: stores (score, candidate_id, candidate_dict)
-    # We use a min-heap of size K so we efficiently track the top-K
-    # without sorting the full 50K candidates.
+    _MASTER_TECH_DICT = {
+        "python", "java", "c++", "react", "angular", "node", "javascript",
+        "aws", "docker", "kubernetes", "sql", "nosql", "postgres",
+        "pytorch", "tensorflow", "machine learning", "deep learning", "nlp",
+        "linux", "ci/cd", "azure", "gcp", "devops", "sre", "terraform"
+    }
+
+    def generate_dynamic_gatekeeper(text: str) -> set:
+        text_lower = text.lower()
+        active_keywords = {term for term in _MASTER_TECH_DICT if term in text_lower}
+        return active_keywords if active_keywords else {"engineer", "developer", "data"}
+
+    _L1_KEYWORDS = generate_dynamic_gatekeeper(jd_text)
+    print(f"      [Gatekeeper] Activated {len(_L1_KEYWORDS)} dynamic keywords based on JD.")
+
+    import collections
+    import re
+    
+    jd_words = collections.Counter(re.findall(r'\w+', jd_text.lower()))
+
+    def l1_fast_filter(cand_raw: str) -> bool:
+        """Requires at least TWO technical keywords to pass the L1 Gatekeeper."""
+        match_count = sum(kw in cand_raw for kw in _L1_KEYWORDS)
+        return match_count >= 2
+
+    def l2_lexical_score(cand_raw: str) -> int:
+        """Fast TF (Term Frequency) overlap scorer."""
+        cand_words = collections.Counter(re.findall(r'\w+', cand_raw))
+        score = 0
+        for w, count in cand_words.items():
+            if w in jd_words:
+                score += min(count, jd_words[w])
+        return score
+
+    l1_rejected = 0
+    skipped = 0
+    l2_candidates = []
+    
+    for cand in iter_candidates(candidates_path):
+        candidate_id = cand.get("candidate_id", "")
+        if not candidate_id:
+            skipped += 1
+            continue
+            
+        cand_raw = json.dumps(cand).lower()
+        if not l1_fast_filter(cand_raw):
+            l1_rejected += 1
+            continue
+            
+        lexical_score = l2_lexical_score(cand_raw)
+        l2_candidates.append((lexical_score, cand))
+        
+    print(f"      L1 Rejected: {l1_rejected:,} candidates.")
+    
+    # Sort survivors by Lexical Score (Descending) and slice top 5000
+    l2_candidates.sort(key=lambda x: x[0], reverse=True)
+    top_l2_cands = l2_candidates[:5000]
+    print(f"      L2 Lexical Scorer selected Top {len(top_l2_cands):,} candidates for dense L3 semantic embedding.")
+
+    # Get max lexical score for normalization
+    max_lexical_score = max(1, top_l2_cands[0][0]) if top_l2_cands else 1
+
+    # ------------------------------------------------------------------
+    # Step 4: L3 Semantic Reranking (PyTorch)
+    # ------------------------------------------------------------------
+    print(f"[4/5] Funnel Stage 3: L3 Dense PyTorch Embedding (Hybrid BM25+Semantic)")
+    
     heap: list = []   # (score, candidate_id, candidate_dict)
     processed = 0
-    skipped = 0
 
-    # Helper to yield chunks
-    def iter_candidate_batches(path: str, batch_size: int = 32):
-        batch = []
-        for c in iter_candidates(path):
-            batch.append(c)
-            if len(batch) >= batch_size:
-                yield batch
-                batch = []
-        if batch:
-            yield batch
+    def iter_candidate_batches(cands_list: list, batch_size: int = 64):
+        for i in range(0, len(cands_list), batch_size):
+            yield cands_list[i:i + batch_size]
 
-    for batch in iter_candidate_batches(candidates_path, batch_size=32):
+    for batch in iter_candidate_batches(top_l2_cands, batch_size=64):
         valid_cands = []
         cand_texts = []
+        lexical_scores = []
 
-        for cand in batch:
-            candidate_id = cand.get("candidate_id", "")
-            if not candidate_id:
-                skipped += 1
-                continue
-
+        for lex_score, cand in batch:
             cand_text = build_candidate_text(cand)
             if not cand_text.strip():
                 skipped += 1
                 continue
-
             valid_cands.append(cand)
             cand_texts.append(cand_text)
+            lexical_scores.append(lex_score)
 
         if not valid_cands:
             continue
 
-        # Embed candidate batch in one go using batch_size=32
-        cand_embeddings = model.encode(cand_texts, batch_size=32, convert_to_tensor=False, show_progress_bar=False)
+        # Dynamic Batch Truncation happens automatically here:
+        # padding=True dynamically pads to the longest sequence in the *current batch*, up to max_seq_length.
+        with torch.inference_mode():
+            cand_embeddings = model.encode(cand_texts, batch_size=64, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
         cand_vecs = cand_embeddings.tolist()
 
         for i, cand in enumerate(valid_cands):
             candidate_id = cand.get("candidate_id", "")
             cand_vec = cand_vecs[i]
+            lex_score = lexical_scores[i]
 
-            # RULE 3: Cosine similarity via raw Python loops (no NumPy)
-            semantic_score = cosine_similarity(jd_vec, cand_vec)
+            # The Hybrid Pinecone Architecture (0.8 Semantic + 0.2 Normalized Lexical)
+            semantic_score = fast_dot_product(jd_vec, cand_vec)
+            normalized_lexical = lex_score / max_lexical_score
+            hybrid_score = (semantic_score * 0.8) + (normalized_lexical * 0.2)
 
-            # --- Behavioral Signal Modifier ---
-            # The JD explicitly warns: down-weight candidates who are
-            # "perfect on paper" but behaviorally unavailable.
-            # This multiplier adjusts the final score based on platform signals.
-            score = semantic_score * _behavioral_modifier(cand)
+            score = hybrid_score * _behavioral_modifier(cand)
 
-            # Maintain top-K min-heap
             if len(heap) < TOP_K:
                 heapq.heappush(heap, (score, candidate_id, cand))
             elif score > heap[0][0]:
                 heapq.heapreplace(heap, (score, candidate_id, cand))
 
-        # Progress reporting
-        prev_processed = processed
         processed += len(valid_cands)
-        
-        # Print if we crossed a 1000 boundary
-        if prev_processed // 1000 < processed // 1000:
-            elapsed = time.time() - t_start
-            best_score = heap[0][0] if heap else 0.0
-            print(f"      Processed {processed:,} candidates | "
-                  f"Elapsed: {elapsed:.0f}s | "
-                  f"Heap min score: {best_score:.4f}")
 
-    print(f"\n[4/5] Ranking complete.")
-    print(f"      Processed: {processed:,} | Skipped: {skipped} | "
+    print(f"      L3 Semantic Processing Complete.")
+    print(f"      Total Processed by L3: {processed:,} | Skipped Total: {skipped} | "
           f"Time: {time.time() - t_start:.1f}s")
 
     # ------------------------------------------------------------------
