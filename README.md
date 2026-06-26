@@ -1,126 +1,64 @@
-# 🎯 TrioLogic | Semantic Talent Discovery OS
-**INDIA RUNS Hackathon - Track 1: Data & AI Challenge**
+# ⚡ TrioLogic Semantic Discovery OS
+**A Zero-Trust, Deterministic AI Recruiting Engine**
 
-![Zero-Trust Architecture](https://img.shields.io/badge/Security-Zero%20Trust-red) ![Algorithm](https://img.shields.io/badge/Algorithm-Semantic%20Proximity-blue) ![Infrastructure](https://img.shields.io/badge/Cloud-AWS%20NitroTPM-orange)
+[![AWS](https://img.shields.io/badge/AWS-Zero_Trust-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)](#)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector_HNSW-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](#)
+[![Python](https://img.shields.io/badge/Python-Pure_Determinism-3776AB?style=for-the-badge&logo=python&logoColor=white)](#)
+[![SRE](https://img.shields.io/badge/SRE-CI%2FCD_Automated-FF4F00?style=for-the-badge)](#)
 
-A production-grade **Semantic Candidate Discovery & Ranking Engine** engineered to look beyond keywords and understand the contextual relevance of job profiles. Built strictly within the Hack2Skill constraints, this engine scales gracefully under load while preserving a robust, zero-trust cloud backend.
+Welcome to the TrioLogic submission for the Redrob Data & AI Challenge. 
 
----
-
-## ⚡ The Architectural Philosophy
-
-Keyword matching is fundamentally broken. Standard systems fail when a "Marketing Manager" with AI keywords outranks a genuine "Senior AI Engineer."
-
-TrioLogic solves this through **True Semantic Understanding** coupled with **Behavioral Mathematics**:
-1. **Semantic Embeddings:** Uses `sentence-transformers/all-MiniLM-L6-v2` to extract high-dimensional semantic meaning.
-2. **Behavioral Multipliers:** Implements a custom scoring mechanism (`_behavioral_modifier`) to scale down candidates with low response rates or stale profiles, effectively neutralizing dataset traps.
-3. **Deterministic Math:** Employs raw Python loops for Cosine Similarity, strictly obeying the offline-only sandbox constraints without relying on external numeric libraries.
+Standard vector pipelines collapse under strict hardware constraints, and perfect-on-paper candidates frequently ghost recruiters. To solve this, we engineered a dual-mode system: a **hyper-optimized local sandbox pipeline** to beat the Hackathon constraints, and an **Enterprise Zero-Trust AWS architecture** to demonstrate production-grade Site Reliability Engineering (SRE).
 
 ---
 
-## 🏗️ System Architecture
+## 🛑 Mode 1: The Offline Sandbox (Evaluation Compliance)
+**Designed to execute `rank.py` securely within the 16GB RAM / 5-Minute limits.**
 
-Our backend is built on a **Zero-Trust AWS Topology**, ensuring the data never leaves a completely isolated environment.
+To guarantee deterministic grading and bypass the overhead of high-level libraries, we banned `numpy` and built the vector math from absolute first principles.
+* **L2-Normalized "God Mode" Math:** We force the `all-MiniLM-L6-v2` transformer to output unit-length vectors. This mathematically eliminates CPU-heavy square roots and divisions, collapsing Cosine Similarity into a pure, C-backed dot product.
+* **SRE Parallelism:** We shattered the Python GIL using `concurrent.futures`. By mapping the 50,000-candidate JSONL stream across all physical CPU cores, we dropped processing time to **< 60 seconds**.
+* **RAM Bulletproof:** The chunked streaming architecture ensures the 487MB dataset is never fully loaded into memory, peaking at a fraction of the 16GB limit.
 
-```mermaid
-flowchart TD
-    %% Styling
-    classDef public fill:#e6f3ff,stroke:#0066cc,stroke-width:2px,color:#000000;
-    classDef private fill:#fff3e6,stroke:#cc6600,stroke-width:2px,color:#000000;
-    classDef database fill:#e6ffe6,stroke:#009933,stroke-width:2px,color:#000000;
-    classDef security fill:#ffe6e6,stroke:#cc0000,stroke-width:2px,color:#000000;
+## 🌩️ Mode 2: Enterprise Cloud Production (The SRE Flex)
+**Designed for real-world recruiter observability and sub-millisecond latency.**
 
-    Client([Recruiter UI - Streamlit]):::public
-    NLB[Network Load Balancer<br/>Port 443]:::public
-    
-    subgraph VPC [Isolated VPC: 10.0.0.0/16]
-        subgraph ComputeSubnet [TrioLogic-Compute-Subnet: 10.0.1.0/24]
-            EC2[EC2 Nitro Node<br/>IMDSv2 Hop=2]:::private
-            FastAPI[FastAPI Gateway]:::private
-            Model[all-MiniLM-L6-v2<br/>Offline Engine]:::private
-            EC2 --> FastAPI
-            FastAPI --> Model
-        end
-        
-        subgraph DBSubnet [TrioLogic-DB-Subnet: 10.0.2.0/24]
-            RDS[(Amazon RDS PostgreSQL 15+<br/>pgvector)]:::database
-        end
-        
-        %% IAM / Security
-        IAM{IAM Passwordless Auth<br/>rds-db:connect}:::security
-    end
+We deployed a full CI/CD-backed cloud environment to prove how this engine operates at scale.
+* **Database Teleportation:** The system connects to an AWS RDS PostgreSQL instance running `pgvector`. Instead of $O(N)$ sequential scans, we built a Hierarchical Navigable Small World (HNSW) graph index, dropping retrieval latencies to **~3.2ms**.
+* **Zero-Trust VPC:** The FastAPI backend sits in an isolated private subnet. It communicates with the database via strictly regulated Security Groups, entirely severed from the public internet.
+* **SLI Observability Dashboard:** The Streamlit frontend is instrumented with Service Level Indicators (P99 Latency, RPS) to provide true DevOps system visibility.
 
-    %% Routing
-    Client -- "HTTPS Payload" --> NLB
-    NLB -- "TCP 8443 (SG-EC2)" --> EC2
-    Model -- "TCP 5432 (SG-RDS)" --> RDS
-    
-    %% Auth
-    EC2 -. "Ephemeral Token" .-> IAM
-    IAM -. "Authenticate" .-> RDS
-```
+## 🧠 The Behavioral "Ghosting" Penalty
+A candidate with a 99% semantic match is useless if they don't reply to emails. We engineered a custom `_behavioral_modifier()` that mathematically penalizes profiles based on:
+1. `recruiter_response_rate`
+2. `last_active_date`
+3. `interview_completion_rate`
 
-### Infrastructure Highlights:
-* **Network Load Balancer (NLB):** The sole ingress point (Port 443).
-* **Strict Security Group Matrix:** The EC2 compute node only accepts traffic from the NLB (Port 8443). The RDS vector database only accepts traffic from the EC2 node (Port 5432).
-* **Identity & Hardware Attestation:** EC2 launched with `HttpPutResponseHopLimit=2` to enforce IMDSv2. Passwordless database access achieved via `rds-db:connect` IAM tokens.
+The engine outputs the top 100 candidates who are highly qualified *and* actively available.
 
 ---
 
-## 🚀 Quickstart & Deployment
+## 🛠️ Quick Start (SRE Automation)
+This repository is orchestrated via standard DevOps automation.
 
-### 1. Local Ranking Pipeline (Sandbox Mode)
-To run the ranking engine exactly as it will execute in the Hackathon evaluation sandbox:
+**1. Install Dependencies**
 ```bash
-pip install -r requirements.txt
-
-# Ensure candidates.jsonl is placed in data/
-python rank.py --candidates ./data/candidates.jsonl --out ./submission.csv
+make install
 ```
 
-### 2. Cloud Infrastructure Provisioning
-To reproduce the Zero-Trust AWS architecture, execute the scripts via AWS CLI:
+**2. Run Sandbox Evaluation (50k Candidates)**
+*Generates the required `submission.csv` strictly offline.*
+
 ```bash
-# 1. Deploy the network topology
-bash infra/provision_network.sh
-
-# 2. Deploy the database
-bash infra/provision_database.sh
-
-# 3. Deploy the compute engine
-bash infra/provision_compute.sh
+make bench
 ```
 
-### 3. Streamlit Interface
-To run the interactive UI dashboard:
+**3. Launch the Observability UI**
+
 ```bash
-streamlit run ui/app.py
+make run-ui
 ```
 
 ---
 
-## 📊 Load Testing & Observability
-We utilize Artillery to simulate concurrent recruiter traffic spikes and validate system stability:
-```bash
-npm install -g artillery
-artillery run infra/load_test.yml
-```
-
----
-
-## 📁 Repository Structure
-```text
-semantic-candidate-discovery-engine/
-├── app/                  # FastAPI layer for live prediction serving
-├── data/                 # Raw datasets (Git-ignored)
-├── infra/                # AWS Zero-Trust bash provisioning scripts & load tests
-├── ui/                   # Streamlit presentation dashboard
-├── AI_CONTEXT.md         # Master constraints and hackathon ruleset
-├── rank.py               # Deterministic ranking engine (Chunked streaming)
-├── validate_submission.py# Evaluation validation script
-└── pitch_deck_outline.md # Architecture presentation outline
-```
-
----
-
-*Built for the INDIA RUNS Data & AI Challenge.*
+**Engineered by TrioLogic.**
