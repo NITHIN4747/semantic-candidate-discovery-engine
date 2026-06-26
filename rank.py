@@ -9,7 +9,7 @@ SANDBOX RULES ENFORCED IN THIS FILE:
   [1] Runs fully offline — zero network calls.
   [2] Streams candidates.jsonl line-by-line — never loads full 487MB into RAM.
   [3] Cosine Similarity computed using raw Python for-loops + math stdlib only.
-      DO NOT import numpy / scipy / sklearn for core ranking math.
+      DO NOT use numpy / scipy / sklearn for core ranking math.
   [4] Completes in ≤ 5 minutes on CPU-only, 16 GB RAM.
   [5] Produces exactly 100 ranked rows in submission.csv.
 

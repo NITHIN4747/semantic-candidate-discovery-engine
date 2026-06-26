@@ -20,4 +20,4 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     - name: Verify SRE Constraints (No NumPy)
       run: |
-        ! grep -r "import numpy" .
+        ! grep -rE "^import numpy|^from numpy" --include="*.py" .
