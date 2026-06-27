@@ -76,27 +76,39 @@ with col2:
                             df = pd.read_csv("submission.csv")  # Defaulting to root since we start streamlit from root or ui
                             
                             # Reformat columns for cleaner UI presentation
-                            df.columns = ["Candidate ID", "Rank", "Semantic Score", "AI Reasoning"]
+                            df.columns = ["Candidate ID", "Rank", "Semantic Score", "Confidence", "Coherence", "Stability", "AI Reasoning"]
                             
+                            def style_confidence(val):
+                                color = ''
+                                if val == 'HIGH': color = '#00FF00'
+                                elif val == 'MEDIUM': color = '#FFA500'
+                                elif val == 'LOW': color = '#FF4500'
+                                return f'color: {color}; font-weight: bold'
+
                             # Display the interactive dataframe
                             st.dataframe(
-                                df.style.background_gradient(subset=['Semantic Score'], cmap='viridis'),
+                                df.style.map(style_confidence, subset=['Confidence']).background_gradient(subset=['Semantic Score', 'Coherence'], cmap='viridis'),
                                 use_container_width=True,
                                 height=400
                             )
                             
                         except FileNotFoundError:
                             # Try one level up if streamlit is started inside ui/
-                            try:
-                                df = pd.read_csv("../submission.csv")
-                                df.columns = ["Candidate ID", "Rank", "Semantic Score", "AI Reasoning"]
-                                st.dataframe(
-                                    df.style.background_gradient(subset=['Semantic Score'], cmap='viridis'),
-                                    use_container_width=True,
-                                    height=400
-                                )
-                            except FileNotFoundError:
-                                st.error("Output CSV not found. Ensure rank.py executed successfully.")
+                            df = pd.read_csv("../submission.csv")
+                            df.columns = ["Candidate ID", "Rank", "Semantic Score", "Confidence", "Coherence", "Stability", "AI Reasoning"]
+                            
+                            def style_confidence(val):
+                                color = ''
+                                if val == 'HIGH': color = '#00FF00'
+                                elif val == 'MEDIUM': color = '#FFA500'
+                                elif val == 'LOW': color = '#FF4500'
+                                return f'color: {color}; font-weight: bold'
+
+                            st.dataframe(
+                                df.style.map(style_confidence, subset=['Confidence']).background_gradient(subset=['Semantic Score', 'Coherence'], cmap='viridis'),
+                                use_container_width=True,
+                                height=400
+                            )
                     else:
                         st.error(f"Backend Engine Error: {response.text}")
                         

@@ -25,6 +25,9 @@ echo "✅ DB Subnet Group Created: $DB_SUBNET_GROUP"
 DB_IDENTIFIER="semantic-vector-db"
 echo "🚀 Launching RDS PostgreSQL Instance (This may take 5-10 minutes)..."
 
+# Generate dynamic secure password
+DB_PASSWORD=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 20)
+
 aws rds create-db-instance \
     --db-instance-identifier $DB_IDENTIFIER \
     --engine postgres \
@@ -33,7 +36,7 @@ aws rds create-db-instance \
     --db-subnet-group-name $DB_SUBNET_GROUP \
     --vpc-security-group-ids "sg-06d637c8e6029259e" \
     --master-username "postgres_admin" \
-    --master-user-password "TempHackathonPass123!" \
+    --master-user-password "$DB_PASSWORD" \
     --no-publicly-accessible \
     --enable-iam-database-authentication \
     --backup-retention-period 0 \
@@ -41,4 +44,5 @@ aws rds create-db-instance \
 
 echo "🎉 RDS PostgreSQL Instance Provisioning Started!"
 echo "🔒 IAM Database Authentication is ENABLED. Static passwords will not be used by the application."
+echo "✅ Dynamic Master Password Generated. Please store it in AWS Secrets Manager: aws secretsmanager create-secret --name rds-master-pass --secret-string \"$DB_PASSWORD\""
 echo "⚠️ ACTION REQUIRED: Once 'Available', connect via SSM to the EC2 node and run 'CREATE EXTENSION vector;' in the database."

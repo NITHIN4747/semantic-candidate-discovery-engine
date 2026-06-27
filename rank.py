@@ -43,7 +43,8 @@ except ImportError:
 # CONSTANTS
 # ---------------------------------------------------------------------------
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"   # 384-dim, ~80 MB, fast on CPU
-TOP_K = 100                                               # number of candidates to rank
+POST_HOC_K = 500                                          # number of candidates to evaluate for confidence
+FINAL_K = 100                                             # number of final trusted candidates to output
 
 # ---------------------------------------------------------------------------
 # JOB DESCRIPTION — extracted from job_description.docx (Hack2Skill dataset)
@@ -372,9 +373,9 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     print(f"      Model loaded + quantized in {time.time() - t_start:.1f}s")
 
     # ------------------------------------------------------------------
-    # Step 2: Embed the Job Description
+    # Step 2: Embed the Job Description & Variants (Layer 5)
     # ------------------------------------------------------------------
-    print("[2/5] Embedding Job Description...")
+    print("[2/5] Embedding Job Description and Semantic Variants...")
     
     # Read dynamic JD from API if it exists, otherwise use fallback
     jd_text = JOB_DESCRIPTION
@@ -388,11 +389,19 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
                     print("      Loaded dynamic JD from data/current_jd.txt")
         except Exception as e:
             print(f"      [WARN] Failed to read {dynamic_jd_path}: {e}")
+            
+    # Generate synonym variants for semantic stability check (Layer 5)
+    jd_v1 = jd_text.replace("AI", "Machine Learning").replace("LLM", "Generative AI").replace("embeddings", "vector representations")
+    jd_v2 = jd_text.replace("AI", "Data Science").replace("LLM", "Foundation Models").replace("embeddings", "dense vectors")
+    jd_v3 = jd_text.replace("AI Engineer", "MLOps Engineer").replace("LLM", "Large Language Models").replace("embeddings", "vector embeddings")
     
     with torch.inference_mode():
         jd_embedding = model.encode(jd_text, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
+        jd_vars_embeddings = model.encode([jd_v1, jd_v2, jd_v3], normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False)
+        
     jd_vec = jd_embedding.tolist()   # convert numpy array → plain Python list
-    print(f"      JD vector: {len(jd_vec)} dimensions")
+    jd_vars_vecs = jd_vars_embeddings.tolist()
+    print(f"      JD vector: {len(jd_vec)} dimensions (along with 3 stability variants)")
 
     # ------------------------------------------------------------------
     # Step 3: L1 Gatekeeper + L2 Lexical Scorer
@@ -509,7 +518,7 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
 
             score = hybrid_score * _behavioral_modifier(cand)
 
-            if len(heap) < TOP_K:
+            if len(heap) < POST_HOC_K:
                 heapq.heappush(heap, (score, candidate_id, cand))
             elif score > heap[0][0]:
                 heapq.heapreplace(heap, (score, candidate_id, cand))
@@ -521,28 +530,84 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
           f"Time: {time.time() - t_start:.1f}s")
 
     # ------------------------------------------------------------------
-    # Step 5: Sort and write submission.csv
+    # Step 5: Sort, Layer 5 Confidence Engine, and write submission.csv
     # ------------------------------------------------------------------
-    print(f"[5/5] Writing submission to: {output_path}")
+    print(f"[5/5] Executing Layer 5 Confidence Engine and writing to: {output_path}")
 
     # Sort: descending full-precision score, then ascending candidate_id for tie-breaking.
     top_candidates = sorted(heap, key=lambda x: (-x[0], x[1]))
+    
+    print(f"      [Layer 5] Analyzing top {POST_HOC_K} candidates for Epistemic Confidence...")
+    
+    # Pre-extract texts for batch encoding
+    l5_cand_texts = [build_candidate_text(item[2]) for item in top_candidates]
+    l5_skills_texts = [", ".join([s.get("name", "") for s in item[2].get("skills", [])][:15]) for item in top_candidates]
+    l5_titles_texts = [", ".join([job.get("title", "") for job in item[2].get("career_history", [])[:3]]) for item in top_candidates]
+    
+    with torch.inference_mode():
+        l5_cand_vecs = model.encode(l5_cand_texts, batch_size=64, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False).tolist()
+        l5_skills_vecs = model.encode(l5_skills_texts, batch_size=64, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False).tolist()
+        l5_titles_vecs = model.encode(l5_titles_texts, batch_size=64, normalize_embeddings=True, convert_to_tensor=False, show_progress_bar=False).tolist()
+        
+    final_candidates = []
+    
+    for i, item in enumerate(top_candidates):
+        score, cand_id, cand = item
+        cand_vec = l5_cand_vecs[i]
+        
+        # 1. Semantic Stability
+        var_scores = [fast_dot_product(jd_var_vec, cand_vec) for jd_var_vec in jd_vars_vecs]
+        mean_score = sum(var_scores) / len(var_scores)
+        variance = sum((x - mean_score) ** 2 for x in var_scores) / len(var_scores)
+        stability_score = math.sqrt(variance)
+        
+        # 2. Coherence
+        if not l5_skills_texts[i] or not l5_titles_texts[i]:
+            coherence_score = 0.0 # Sparse
+        else:
+            coherence_score = fast_dot_product(l5_skills_vecs[i], l5_titles_vecs[i])
+            
+        # 3. Confidence Band Logic
+        confidence_band = "MEDIUM"
+        if coherence_score >= 0.5 and stability_score <= 0.02:
+            confidence_band = "HIGH"
+        elif coherence_score < 0.35 and stability_score <= 0.05:
+            confidence_band = "LOW"
+            
+        if coherence_score > 0.0 and coherence_score < 0.35 and score > 0.6:
+            confidence_band = "DARK"
+        if stability_score > 0.05:
+            confidence_band = "DARK"
+            
+        final_candidates.append({
+            "cand_id": cand_id,
+            "score": score,
+            "cand": cand,
+            "confidence_band": confidence_band,
+            "coherence_score": coherence_score,
+            "stability_score": stability_score
+        })
+        
+    # Filter out DARK and take Top 100
+    green_yellow = [c for c in final_candidates if c["confidence_band"] != "DARK"]
+    top_100_final = green_yellow[:FINAL_K]
+    
+    dark_dropped = len(final_candidates) - len(green_yellow)
+    print(f"      [Layer 5] Dropped {dark_dropped} DARK (keyword stuffed) candidates.")
+    print(f"      [Layer 5] Outputting {len(top_100_final)} trusted candidates to CSV.")
 
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["candidate_id", "rank", "score", "reasoning"])
 
-        # We need to ensure the WRITTEN score (4 d.p.) is also non-increasing,
-        # and that ties at the written precision are broken by ascending candidate_id.
         # Strategy: group consecutive entries with the same rounded score,
         # sort each group by candidate_id ascending, then write in order.
         rounded_groups = []
         current_group = []
         current_rounded = None
 
-        for item in top_candidates:
-            score, cand_id, cand = item
-            r = f"{score:.4f}"
+        for item in top_100_final:
+            r = f"{item['score']:.4f}"
             if r != current_rounded:
                 if current_group:
                     rounded_groups.append(current_group)
@@ -556,10 +621,16 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
         # Within each same-rounded-score group, sort by candidate_id ascending
         rank_num = 1
         for group in rounded_groups:
-            group_sorted = sorted(group, key=lambda x: x[1])  # ascending candidate_id
-            for score, cand_id, cand in group_sorted:
-                reasoning = build_reasoning(cand, score)
-                writer.writerow([cand_id, rank_num, f"{score:.4f}", reasoning])
+            group_sorted = sorted(group, key=lambda x: x["cand_id"])  # ascending candidate_id
+            for c in group_sorted:
+                base_reasoning = build_reasoning(c["cand"], c["score"])
+                l5_reasoning = f"[{c['confidence_band']} BAND] Coh:{c['coherence_score']:.2f} Stb:{c['stability_score']:.2f} | {base_reasoning}"
+                writer.writerow([
+                    c["cand_id"], 
+                    rank_num, 
+                    f"{c['score']:.4f}", 
+                    l5_reasoning
+                ])
                 rank_num += 1
 
     # ------------------------------------------------------------------
@@ -568,9 +639,10 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
     total_time = time.time() - t_start
     print(f"\n{'='*60}")
     print(f"  [OK]  Submission generated: {output_path}")
-    print(f"  [##]  Candidates ranked:    {min(len(top_candidates), TOP_K)}")
-    print(f"  [1st] Top score:            {top_candidates[0][0]:.4f}")
-    print(f"  [Nth] {TOP_K}th score:          {top_candidates[-1][0]:.4f}")
+    print(f"  [##]  Candidates ranked:    {len(top_100_final)}")
+    if top_100_final:
+        print(f"  [1st] Top score:            {top_100_final[0]['score']:.4f}")
+        print(f"  [Nth] {len(top_100_final)}th score:          {top_100_final[-1]['score']:.4f}")
     print(f"  [t]   Total runtime:        {total_time:.1f}s")
     print(f"{'='*60}\n")
     print("Run validator: python validate_submission.py submission.csv")

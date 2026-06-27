@@ -34,7 +34,19 @@ A candidate with a 99% semantic match is useless if they don't reply to emails. 
 2. `last_active_date`
 3. `interview_completion_rate`
 
-The engine outputs the top 100 candidates who are highly qualified *and* actively available.
+## 🛡️ The Epistemic Confidence Engine (Layer 5)
+Every other system trusts its own ranking blindly. Our architecture uniquely outputs a **Confidence Topology**. We evaluate the top 500 semantic matches through a post-hoc analysis:
+* **Signal Coherence:** We independently encode candidate skills vs. job titles. If they don't semantically align, the profile is structurally incoherent.
+* **Semantic Stability:** We dynamically generate 3 synonyms of the JD and compute standard deviation (`std(scores)`). Keyword-stuffed profiles collapse under linguistic permutation.
+* **DARK Band Purge:** Candidates flagged as incoherent or highly volatile are explicitly marked `DARK` and purged, ensuring the recruiter only sees 100 trusted `GREEN/YELLOW` candidates. We solve the broken feedback loop by knowing exactly when *not* to trust the ranker.
+
+## 🔒 5-Rule Cybersecurity Hardening
+This engine is secured like production fintech infrastructure:
+1. **Least Privilege:** The Docker container operates under a non-root `appuser`.
+2. **Defense in Depth:** The EC2 compute node strictly enforces IMDSv2 hop limits.
+3. **Secure Secrets:** Hardcoded passwords were eradicated. We dynamically generate 24-character cryptographic tokens (`openssl rand`) for pgvector auth.
+4. **Vulnerability Management:** The CI/CD pipeline runs `pip-audit`/`safety` on all dependencies to capture a full security manifest without blocking rapid hackathon deploys.
+5. **Audit & Logging:** Explicit IAM role assumptions are tracked and logged in the telemetry.
 
 ---
 

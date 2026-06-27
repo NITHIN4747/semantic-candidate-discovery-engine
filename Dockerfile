@@ -22,6 +22,10 @@ RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTr
 # Copy the rest of the application code
 COPY . .
 
+# Create non-root user and set permissions (Least Privilege)
+RUN useradd -m -r appuser && chown -R appuser /app
+USER appuser
+
 # Expose Port 8443 to comply strictly with the SG-EC2-Compute Security Group matrix
 EXPOSE 8443
 

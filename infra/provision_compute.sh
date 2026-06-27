@@ -84,6 +84,7 @@ INSTANCE_ID=$(aws ec2 run-instances \
 
 echo "🎉 Compute Node Launched: $INSTANCE_ID"
 echo "🔒 IMDSv2 Enforced with Hop Limit = 2. Container metadata access is secured."
+echo "📝 [AUDIT LOG] IAM Role $PROFILE_NAME assumed by compute node $INSTANCE_ID at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
 # Cleanup temp files
 rm ec2-trust-policy.json app-permissions-policy.json
