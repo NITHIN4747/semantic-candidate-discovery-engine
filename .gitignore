@@ -60,3 +60,8 @@ Thumbs.db
 *.tmp
 submission_*.csv
 !sample_submission.csv
+
+# Internal Docs
+TEAM_HANDOFF.md
+UI_UX_ENTERPRISE_HANDOFF.md
+.streamlit/

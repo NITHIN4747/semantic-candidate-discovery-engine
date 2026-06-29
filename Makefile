@@ -8,11 +8,11 @@ test:
 	python -m unittest discover tests/
 
 run-ui:
-	streamlit run app.py
+	streamlit run ui/app.py
 
 # Simulates the sandbox evaluation
 bench:
-	python rank.py --candidates data/candidates.jsonl --out submission.csv
+	python rank.py --candidates data/candidates_50k.jsonl --out submission.csv
 
 clean:
 	rm -rf __pycache__ .pytest_cache

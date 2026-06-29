@@ -511,7 +511,7 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
             cand_vec = cand_vecs[i]
             lex_score = lexical_scores[i]
 
-            # The Hybrid Pinecone Architecture (0.8 Semantic + 0.2 Normalized Lexical)
+            # 80/20 blend: semantic dominates, lexical stops pure-vibe matches slipping through.
             semantic_score = fast_dot_product(jd_vec, cand_vec)
             normalized_lexical = lex_score / max_lexical_score
             hybrid_score = (semantic_score * 0.8) + (normalized_lexical * 0.2)
@@ -567,37 +567,56 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
         else:
             coherence_score = fast_dot_product(l5_skills_vecs[i], l5_titles_vecs[i])
             
+        # Compute the raw semantic score (pure cosine, pre-behavioral, pre-lexical)
+        semantic_score = fast_dot_product(jd_vec, cand_vec)
+
         # 3. Confidence Band Logic
+        # Change 2: coherence < 0.35 alone triggers LOW — no stability condition required.
+        # This ensures Civil Engineers, Sales Executives, etc. can never be MEDIUM.
         confidence_band = "MEDIUM"
         if coherence_score >= 0.5 and stability_score <= 0.02:
             confidence_band = "HIGH"
-        elif coherence_score < 0.35 and stability_score <= 0.05:
+        elif coherence_score < 0.35:
             confidence_band = "LOW"
-            
+
+        # DARK overrides LOW — incoherent profile with high score, or score volatile across JD variants
         if coherence_score > 0.0 and coherence_score < 0.35 and score > 0.6:
             confidence_band = "DARK"
         if stability_score > 0.05:
             confidence_band = "DARK"
-            
+
         final_candidates.append({
             "cand_id": cand_id,
             "score": score,
+            "semantic_score": semantic_score,
             "cand": cand,
             "confidence_band": confidence_band,
             "coherence_score": coherence_score,
             "stability_score": stability_score
         })
         
-    # Filter out DARK and take Top 100
-    green_yellow = [c for c in final_candidates if c["confidence_band"] != "DARK"]
-    top_100_final = green_yellow[:FINAL_K]
-    
-    dark_dropped = len(final_candidates) - len(green_yellow)
-    print(f"      [Layer 5] Dropped {dark_dropped} DARK (keyword stuffed) candidates.")
-    print(f"      [Layer 5] Outputting {len(top_100_final)} trusted candidates to CSV.")
+    # Change 1 (Option B): Secondary heap — final 100 is built from HIGH and MEDIUM only.
+    # LOW and DARK candidates are excluded from the ranked output entirely.
+    # LOW candidates are those with coherence_score < 0.35 (skills/title mismatch).
+    # This is the gate that removes Civil Engineers, Sales Executives, etc.
+    # The pool is the already-sorted top-500; we never touch the embedding pipeline.
+    high_medium = [c for c in final_candidates if c["confidence_band"] in ("HIGH", "MEDIUM")]
+    top_100_final = high_medium[:FINAL_K]
+
+    dark_dropped  = sum(1 for c in final_candidates if c["confidence_band"] == "DARK")
+    low_excluded  = sum(1 for c in final_candidates if c["confidence_band"] == "LOW")
+    print(f"      [Layer 5] Excluded {dark_dropped} DARK (keyword stuffed) candidates.")
+    print(f"      [Layer 5] Excluded {low_excluded} LOW (incoherent profile) candidates.")
+    print(f"      [Layer 5] Outputting {len(top_100_final)} HIGH/MEDIUM trusted candidates to CSV.")
+    if len(top_100_final) < FINAL_K:
+        print(f"      [Layer 5] WARNING: Only {len(top_100_final)} HIGH/MEDIUM candidates available — "
+              f"output will have fewer than {FINAL_K} rows. Never padding with LOW.")
 
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
+        # Validator enforces exactly 4 columns: candidate_id, rank, score, reasoning.
+        # Structured epistemic signals (band, semantic_score, coherence, stability) are
+        # embedded in reasoning as a clean parseable prefix: BAND | sem:X | coh:X | stb:X
         writer.writerow(["candidate_id", "rank", "score", "reasoning"])
 
         # Strategy: group consecutive entries with the same rounded score,
@@ -624,12 +643,21 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
             group_sorted = sorted(group, key=lambda x: x["cand_id"])  # ascending candidate_id
             for c in group_sorted:
                 base_reasoning = build_reasoning(c["cand"], c["score"])
-                l5_reasoning = f"[{c['confidence_band']} BAND] Coh:{c['coherence_score']:.2f} Stb:{c['stability_score']:.2f} | {base_reasoning}"
+                # Change 4: structured reasoning prefix — band and all four numeric signals
+                # are readable as plain prose AND parseable by splitting on " | ".
+                # Format: BAND | sem:0.6622 | coh:0.39 | stb:0.04 | <human prose>
+                structured_prefix = (
+                    f"{c['confidence_band']} | "
+                    f"sem:{c['semantic_score']:.4f} | "
+                    f"coh:{c['coherence_score']:.2f} | "
+                    f"stb:{c['stability_score']:.2f}"
+                )
+                full_reasoning = f"{structured_prefix} | {base_reasoning}"
                 writer.writerow([
-                    c["cand_id"], 
-                    rank_num, 
-                    f"{c['score']:.4f}", 
-                    l5_reasoning
+                    c["cand_id"],
+                    rank_num,
+                    f"{c['score']:.4f}",
+                    full_reasoning
                 ])
                 rank_num += 1
 
