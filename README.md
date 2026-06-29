@@ -1,23 +1,30 @@
-# TrioLogic — Semantic Discovery OS
-**A Zero-Trust, Deterministic AI Recruiting Engine**
+<h1 align="center">⚡ TrioLogic Semantic Discovery OS</h1>
 
-[![AWS](https://img.shields.io/badge/AWS-Zero_Trust-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)](#)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector_HNSW-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](#)
-[![Python](https://img.shields.io/badge/Python-Pure_Determinism-3776AB?style=for-the-badge&logo=python&logoColor=white)](#)
-[![SRE](https://img.shields.io/badge/SRE-CI%2FCD_Automated-FF4F00?style=for-the-badge)](#)
+<p align="center">
+  <strong>A Zero-Trust, Deterministic AI Recruiting Engine</strong>
+</p>
 
-TrioLogic's submission for the Redrob Data & AI Challenge.
+<p align="center">
+  <img src="https://img.shields.io/badge/AWS-Zero_Trust-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white" alt="AWS Zero Trust" />
+  <img src="https://img.shields.io/badge/PostgreSQL-pgvector_HNSW-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL pgvector" />
+  <img src="https://img.shields.io/badge/Python-Pure_Determinism-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python Determinism" />
+  <img src="https://img.shields.io/badge/SRE-CI%2FCD_Automated-FF4F00?style=for-the-badge" alt="SRE CI/CD" />
+</p>
 
-Standard vector pipelines collapse under strict hardware constraints, and perfect-on-paper candidates frequently ghost recruiters. We engineered a dual-mode system: a **hyper-optimized local sandbox pipeline** to beat the hackathon constraints, and an **Enterprise Zero-Trust AWS architecture** to show what production looks like.
+<p align="center">
+  <em>TrioLogic's official submission for the Redrob Data & AI Challenge.</em>
+</p>
 
 ---
 
-## Architecture
+Standard vector pipelines collapse under strict hardware constraints, and perfect-on-paper candidates frequently ghost recruiters. We engineered a dual-mode system: a **hyper-optimized local sandbox pipeline** to beat the hackathon limits, and an **Enterprise Zero-Trust AWS architecture** to demonstrate true production readiness.
+
+## 📊 Systems Architecture
 
 ```mermaid
 graph TD
     A["Raw Candidates: 50,000 JSONL"] -->|Chunked Streaming| B("L1/L2: BM25 Lexical Sieve")
-    B -->|28,885 dropped in ms| C{"Top 5,000 Candidates"}
+    B -->|L1 drops 28,885 -> L2 slices top 5k| C{"Top 5,000 Candidates"}
 
     C -->|PyTorch INT8 CPU| D["L3: Dense Semantic Rerank"]
     D -->|Pure dot product on unit vectors| E{"Top 500 Candidates"}
@@ -37,72 +44,79 @@ graph TD
 
 ---
 
-## Mode 1: Offline Sandbox (Evaluation Compliance)
-**Executes `rank.py` securely within the 16 GB RAM / 5-minute limits.**
+## 🛑 Mode 1: Offline Sandbox (Evaluation Compliance)
+**Executes securely within strict 16 GB RAM / 5-minute constraints.**
 
-We banned `numpy` and built the vector math from first principles.
+We stripped out high-overhead libraries (including `numpy`) to build the vector mathematics from absolute first principles.
 
-- **Zero-sqrt dot product:** We force `all-MiniLM-L6-v2` to output L2-normalized unit vectors. Cosine similarity collapses to a raw dot product — no square roots, no division.
-- **Dynamic INT8 quantization:** PyTorch Linear layers are quantized at boot via `torch.quantization.quantize_dynamic`. Cuts memory bandwidth on CPU significantly.
-- **Streaming JSONL reader:** The 487 MB dataset is never fully loaded into RAM. Candidates are streamed and discarded line-by-line.
-- **Clocked runtime:** **86.4 seconds** on a CPU-only machine against a 300-second limit. 3.5× headroom.
+* **Zero-Sqrt Dot Product:** We force the `all-MiniLM-L6-v2` transformer to output L2-normalized unit vectors. Cosine similarity thus mathematically collapses to a raw dot product—eliminating all square roots and division.
+* **Dynamic INT8 Quantization:** PyTorch Linear layers are quantized at boot via `torch.quantization.quantize_dynamic`, drastically reducing CPU memory bandwidth utilization.
+* **Streaming JSONL Reader:** The 487 MB candidate dataset is never fully loaded into RAM. Candidate chunks are streamed, evaluated, and immediately garbage-collected.
+* **Operational Telemetry:** Clocked at **86.4 seconds** on a standard CPU node against a 300-second constraint (3.4x headroom).
 
-## Mode 2: Enterprise Cloud Production (The SRE Flex)
-**Sub-millisecond latency via pgvector HNSW, with full observability.**
+## 🌩️ Mode 2: Enterprise Cloud Production (SRE Scale)
+**Sub-millisecond retrieval via AWS pgvector HNSW with total system observability.**
 
-- **Database:** AWS RDS PostgreSQL with the `pgvector` extension. HNSW graph index drops retrieval to ~3.2ms instead of O(N) sequential scans.
-- **Zero-Trust VPC:** FastAPI backend lives in a private subnet. No public internet access. Security Groups enforce strict port-level isolation between compute and database tiers.
-- **SLI observability:** Streamlit frontend exposes P99 latency and RPS cards so the system is never a black box to operators.
+* **Database Engine:** AWS RDS PostgreSQL utilizing the `pgvector` extension. A Hierarchical Navigable Small World (HNSW) graph index reduces retrieval times to `~3.2ms`, bypassing O(N) sequential scans.
+* **Zero-Trust VPC:** The FastAPI backend runs in an isolated private subnet with no public internet ingress. Security Groups enforce rigid, port-level network isolation between the compute and database tiers.
+* **SLI Observability:** The Streamlit SRE frontend exposes P99 latency, RAM utilization, and Epistemic exclusions in a Datadog-style metrics dashboard.
 
-## The Behavioral Ghosting Penalty
-A candidate with a 99% semantic match is useless if they don't reply to emails. `_behavioral_modifier()` returns a multiplier in `[0.5, 1.0]` applied directly to the final score, derived from:
+---
+
+## 🧠 Behavioral Availability Modifier
+A candidate with a 99% semantic match is operationally useless if they ignore recruiter outreach. We engineered a proprietary `_behavioral_modifier()` that returns a mathematical penalty coefficient mapped into the `[0.5, 1.0]` space, derived from:
 
 1. `recruiter_response_rate`
 2. `last_active_date`
 3. `interview_completion_rate`
 
-## Layer 5: Epistemic Confidence Engine
-Every other system trusts its own ranking blindly. We don't.
+---
 
-After semantic ranking, the top 500 are run through two independent tests:
+## 🛡️ Layer 5: Epistemic Confidence Engine
+Most AI systems blindly trust their own highest-ranked vector neighbors. We engineered a **Confidence Topology** to interrogate the top 500 semantic matches via two independent validity gates:
 
-- **Coherence test:** Skills embedding vs. job titles embedding. If they don't align (`cosine < 0.35`), the profile is structurally incoherent — skills claimed don't match lived experience.
-- **Stability test:** Three JD synonym variants are generated (`AI → Machine Learning`, `LLM → GenAI`, etc.). Score standard deviation across variants is computed. A real ML engineer scores stably; a keyword stuffer collapses (`σ > 0.05 → DARK`).
+1. **Signal Coherence:** We independently encode candidate skills versus their job titles. If these vectors fail to align (`cosine < 0.35`), the profile is flagged as structurally incoherent (e.g., claiming Senior ML skills while holding a Civil Engineer title).
+2. **Semantic Stability:** Three JD synonym variants are generated dynamically (e.g., `AI` → `Machine Learning`). The standard deviation (`σ`) of the candidate's score across these permutations is computed. An authentic ML engineer maintains a stable score; a keyword stuffer's score mathematically collapses (`σ > 0.05`).
 
-**Result:** 69 DARK profiles excluded, 273 LOW-coherence profiles excluded. The final 100 are exclusively HIGH/MEDIUM confidence candidates.
-
-## 5-Rule Cybersecurity Hardening
-
-1. **Least Privilege:** Docker container runs as non-root `appuser`.
-2. **Defense in Depth:** EC2 node enforces IMDSv2 with hop limit 2.
-3. **Secure Secrets:** No hardcoded passwords. DB master password generated via `openssl rand -base64 24` at provision time.
-4. **Vulnerability Management:** CI runs `safety check` with `continue-on-error: true` — captures a full security manifest without blocking deploys.
-5. **Audit Logging:** IAM role assumptions are echoed with UTC timestamp to stdout.
+**Outcome:** The engine explicitly drops the **DARK** band (Keyword Stuffers) and **LOW** band (Incoherent Profiles). The resulting CSV contains exclusively `HIGH` and `MEDIUM` trust profiles.
 
 ---
 
-## Quick Start
+## 🔒 5-Rule Cybersecurity SRE Hardening
 
-**1. Install dependencies**
+This engine is hardened to enterprise financial infrastructure standards:
+
+1. **Least Privilege:** The Docker container operates strictly under a non-root `appuser`.
+2. **Defense in Depth:** The EC2 compute node strictly enforces IMDSv2 with a Hop Limit of 2, isolating container metadata.
+3. **Secure Secrets:** Absolutely zero hardcoded passwords. The RDS master password is dynamically generated via `openssl rand -base64 24` at provisioning time.
+4. **Vulnerability Management:** CI/CD execution runs `safety check` with `continue-on-error: true`—capturing a full security manifest without blocking rapid deployments.
+5. **Audit Logging:** IAM role assumptions echo directly to `stdout` with UTC timestamps for forensic tracking.
+
+---
+
+## 🛠️ Quick Start
+
+**1. Install Core Dependencies**
 ```bash
 make install
 ```
 
-**2. Run sandbox evaluation (50k candidates)**
+**2. Execute Sandbox Evaluation** (Simulates Bot Grading on 50k Candidates)
 ```bash
 make bench
 ```
 
-**3. Validate the output**
+**3. Validate Submission Output**
 ```bash
 python validate_submission.py submission.csv
 ```
 
-**4. Launch the observability UI**
+**4. Launch SRE Observability UI**
 ```bash
 make run-ui
 ```
 
 ---
-
-**Engineered by TrioLogic.**
+<p align="center">
+  <i>Engineered with precision by <b>TrioLogic</b>.</i>
+</p>
