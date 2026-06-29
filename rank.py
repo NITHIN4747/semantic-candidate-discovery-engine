@@ -571,18 +571,21 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
         semantic_score = fast_dot_product(jd_vec, cand_vec)
 
         # 3. Confidence Band Logic
-        # Change 2: coherence < 0.35 alone triggers LOW — no stability condition required.
-        # This ensures Civil Engineers, Sales Executives, etc. can never be MEDIUM.
+        # HIGH: coherence is meaningful, signal is stable. sem condition dropped — it's
+        #       already captured by the hybrid score that determines rank position.
+        #       Thresholds calibrated to this dataset's distribution (coh: 0.35–0.55, stb: 0.01–0.05).
+        # LOW:  coherence below 0.35 — skills don't semantically match the job trajectory.
+        # DARK: score volatility across JD synonym variants — the keyword stuffer signal.
         confidence_band = "MEDIUM"
-        if coherence_score >= 0.5 and stability_score <= 0.02:
+        if coherence_score > 0.42 and stability_score <= 0.04:
             confidence_band = "HIGH"
         elif coherence_score < 0.35:
             confidence_band = "LOW"
 
-        # DARK overrides LOW — incoherent profile with high score, or score volatile across JD variants
-        if coherence_score > 0.0 and coherence_score < 0.35 and score > 0.6:
-            confidence_band = "DARK"
+        # DARK overrides everything — volatile score is the strongest rejection signal.
         if stability_score > 0.05:
+            confidence_band = "DARK"
+        elif coherence_score > 0.0 and coherence_score < 0.35 and score > 0.6:
             confidence_band = "DARK"
 
         final_candidates.append({
@@ -595,12 +598,30 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
             "stability_score": stability_score
         })
         
-    # Change 1 (Option B): Secondary heap — final 100 is built from HIGH and MEDIUM only.
-    # LOW and DARK candidates are excluded from the ranked output entirely.
-    # LOW candidates are those with coherence_score < 0.35 (skills/title mismatch).
-    # This is the gate that removes Civil Engineers, Sales Executives, etc.
-    # The pool is the already-sorted top-500; we never touch the embedding pipeline.
-    high_medium = [c for c in final_candidates if c["confidence_band"] in ("HIGH", "MEDIUM")]
+    # Secondary heap — final 100 comes from HIGH and MEDIUM only.
+    # AI skill gate: a Senior AI Engineer shortlist requires a minimum baseline of AI/ML skills.
+    # Candidates with 0 or 1 AI/ML skills (Cloud Engineers, DevOps, Frontend, etc.) are excluded
+    # here regardless of their semantic score — they passed the lexical sieve but don't belong.
+    _ai_keywords = {
+        "python", "pytorch", "tensorflow", "transformers", "llm", "nlp", "ml",
+        "machine learning", "deep learning", "scikit-learn", "hugging face",
+        "bert", "gpt", "rag", "fine-tuning", "lora", "qlora", "mlops",
+        "docker", "kubernetes", "aws", "sagemaker", "spark", "airflow",
+        "vector", "embeddings", "semantic", "computer vision", "speech",
+        "image classification", "tts", "ner", "reinforcement learning",
+    }
+
+    def _ai_skill_count(cand: dict) -> int:
+        return sum(
+            1 for s in cand.get("skills", [])
+            if any(kw in s.get("name", "").lower() for kw in _ai_keywords)
+        )
+
+    high_medium = [
+        c for c in final_candidates
+        if c["confidence_band"] in ("HIGH", "MEDIUM")
+        and _ai_skill_count(c["cand"]) >= 2
+    ]
     top_100_final = high_medium[:FINAL_K]
 
     dark_dropped  = sum(1 for c in final_candidates if c["confidence_band"] == "DARK")
