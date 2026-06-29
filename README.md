@@ -61,64 +61,74 @@ graph TD
 
 ## 🚀 Core Innovations
 
-### 1. Epistemic Confidence Engine (Layer 5)
+### 1. Zero-Sqrt Dot Product (L3 Dense Rerank)
+
+By forcing `all-MiniLM-L6-v2` to output L2-normalized unit vectors ($\|\mathbf{v}\| = 1$), the computationally expensive Cosine Similarity formula mathematically collapses to a raw dot product, eliminating all square roots and division at inference time on CPU:
+
+$$\text{Similarity}(\mathbf{v}_{cand}, \mathbf{v}_{JD}) = \frac{\mathbf{v}_{cand} \cdot \mathbf{v}_{JD}}{\|\mathbf{v}_{cand}\|\,\|\mathbf{v}_{JD}\|} = \mathbf{v}_{cand} \cdot \mathbf{v}_{JD} = \sum_{i=1}^{384} c_i \, j_i$$
+
+The result is then combined with a BM25 lexical score in an 80/20 blend to prevent pure-semantic "vibe matches" that lack hard skills:
+
+$$S_{hybrid} = 0.8 \cdot (\mathbf{v}_{cand} \cdot \mathbf{v}_{JD}) + 0.2 \cdot L_{norm}$$
+
+where $L_{norm}$ is the BM25 term-frequency score normalized against the maximum across all candidates in the batch.
+
+---
+
+### 2. Epistemic Confidence Engine (Layer 5)
 
 Standard vector databases suffer from *semantic hallucinations* — matching a Frontend Developer to a Backend role purely on sentence structure, ignoring hard-skill mismatches. Layer 5 implements a self-auditing **Confidence Topology** by independently verifying every top-500 semantic match through two statistical gates:
 
 **Gate A — Semantic Stability (σ):**
-Three synonym permutations of the Job Description are generated dynamically (e.g., `AI → Machine Learning`, `LLM → GenAI`). A candidate's score standard deviation across these variants is computed. An engineer with genuine skills scores stably. A keyword-stuffer's score collapses under linguistic perturbation.
 
-```
-σ(score_variants) > 0.05  →  flagged DARK, purged
-```
+Three synonym permutations of the Job Description are generated dynamically (e.g., `AI → Machine Learning`, `LLM → GenAI`). The population standard deviation of the candidate's score across these variants is computed. An engineer with genuine skills scores stably. A keyword-stuffer's score collapses under linguistic perturbation:
+
+$$\sigma = \sqrt{\frac{1}{N}\sum_{k=1}^{N}(S_k - \mu)^2} \qquad N = 3, \quad \mu = \frac{1}{N}\sum_{k=1}^{N} S_k$$
+
+$$\text{If } \sigma > 0.05 \implies \text{Classify as } \texttt{DARK} \text{ (purged)}$$
 
 **Gate B — Signal Coherence:**
-Candidate `skills` and `job_titles` are embedded and compared independently. If cosine similarity falls below threshold, the profile is structurally incoherent — skills listed do not match the professional trajectory.
 
-```
-cosine(skills_vec, title_vec) < 0.35  →  flagged LOW, purged
-```
+Candidate `skills` and `job_titles` are embedded independently. If their cosine similarity falls below threshold, the profile is flagged as structurally incoherent — listed skills do not match professional trajectory:
 
-Every candidate in the final 100 has cleared both gates and carries an explicit confidence band (`HIGH` or `MEDIUM`) with full epistemic reasoning in the output CSV.
+$$\text{If } \cos(\mathbf{v}_{skills},\, \mathbf{v}_{titles}) < 0.35 \implies \text{Classify as } \texttt{LOW} \text{ (purged)}$$
+
+Every candidate in the final 100 has cleared both gates. Each carries an explicit confidence band (`HIGH` or `MEDIUM`) with full epistemic reasoning in the output CSV.
 
 ---
 
-### 2. CPU-Optimized Vector Mathematics
+### 3. Behavioral Availability Modifier
+
+A semantically perfect candidate who ignores recruiter outreach has zero operational value. Five independent availability signals are applied as cascading multipliers to the hybrid score, with the result clamped to $[0.5, 1.0]$ so behavioral signals never fully override semantic fit:
+
+$$S_{final} = S_{hybrid} \times \underbrace{\prod_{s \in \mathcal{B}} m_s(\cdot)}_{\text{clamped to } [0.5,\, 1.0]}$$
+
+where $\mathcal{B}$ = {`recruiter_response_rate`, `open_to_work_flag`, `last_active_date`, `interview_completion_rate`, `offer_acceptance_rate`} and each $m_s \in (0, 1]$.
+
+---
+
+### 4. CPU-Optimized Execution
 
 `numpy` was eliminated entirely. The pipeline implements vector math from first principles:
 
-- **Zero-sqrt dot product:** `all-MiniLM-L6-v2` is forced to output L2-normalized unit vectors. Cosine similarity collapses to a raw C-backed dot product — no square roots, no division, no overhead.
-- **Dynamic INT8 Quantization:** PyTorch Linear layers are quantized at boot via `torch.quantization.quantize_dynamic`, reducing CPU memory bandwidth significantly.
-- **Streaming JSONL reader:** The 487 MB dataset is never held in memory. Candidates are streamed, scored, and garbage-collected line by line.
+- **Dynamic INT8 Quantization:** PyTorch Linear layers are quantized at boot via `torch.quantization.quantize_dynamic`, reducing CPU memory bandwidth utilization.
+- **Streaming JSONL Reader:** The 487 MB dataset is never held in memory. Candidates are streamed, scored, and garbage-collected line by line.
+- **Model Caching:** `all-MiniLM-L6-v2` is baked into the Docker image at build time. Zero network calls at runtime.
 
 ---
 
-### 3. Dual-Mode Deployment Architecture
+### 5. Dual-Mode Deployment Architecture
 
 | Mode | Target | Execution |
 | :--- | :--- | :--- |
-| **Mode 1 — Offline Sandbox** | Automated grading, reproducible evaluation | `rank.py` runs fully air-gapped; HuggingFace model is baked into the Docker image |
-| **Mode 2 — Cloud Production** | Live enterprise deployment | FastAPI backend → RDS PostgreSQL (pgvector HNSW), private VPC subnet, IMDSv2 EC2 |
+| **Mode 1 — Offline Sandbox** | Automated grading, reproducible evaluation | `rank.py` runs fully air-gapped; model pre-cached in Docker image |
+| **Mode 2 — Cloud Production** | Live enterprise deployment | FastAPI → RDS PostgreSQL (pgvector HNSW), private VPC subnet, IMDSv2 EC2 |
 
 In Mode 2, HNSW graph indexing drops retrieval latency from O(N) sequential scans to approximately **3.2ms per query**.
 
 ---
 
-### 4. Behavioral Availability Modifier
-
-A semantically perfect candidate who ignores recruiter outreach has zero operational value. A scalar modifier in `[0.5, 1.0]` is applied to every final score, derived from three behavioral signals:
-
-- `recruiter_response_rate`
-- `last_active_date`
-- `interview_completion_rate`
-
-The modifier depresses scores for cold profiles and surfaces high-engagement candidates ahead of equally-matched but unresponsive ones.
-
----
-
 ## 🔒 Security Hardening
-
-Infrastructure is hardened against the OWASP and CIS Benchmark threat model:
 
 | Rule | Implementation |
 | :--- | :--- |
