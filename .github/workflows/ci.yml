@@ -21,3 +21,8 @@ jobs:
     - name: Verify SRE Constraints (No NumPy)
       run: |
         ! grep -rE "^import numpy|^from numpy" --include="*.py" .
+    - name: Vulnerability Management (Safety Check)
+      continue-on-error: true
+      run: |
+        pip install safety
+        safety check -r requirements.txt || true

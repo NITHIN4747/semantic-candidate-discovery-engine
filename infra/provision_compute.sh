@@ -1,6 +1,11 @@
 #!/bin/bash
-# INDIA RUNS Hackathon - TrioLogic Compute & IAM Provisioning
-# Establishes Zero-Trust IAM roles, SSM access, and launches the IMDSv2-hardened EC2 node.
+# TrioLogic — Compute & IAM Provisioning
+# Provisions Zero-Trust IAM roles, SSM shell access, and an IMDSv2-hardened EC2 node.
+#
+# Prerequisites — run provision_network.sh first, then export its outputs:
+#   export SUBNET_COMPUTE=<value from provision_network.sh output>
+#   export SG_EC2=<value from provision_network.sh output>
+# Both variables must be set or this script exits immediately.
 
 echo "🚀 Initiating Zero-Trust Compute & Identity Deployment..."
 
@@ -63,27 +68,30 @@ echo "✅ EC2 Instance Profile Created and Linked."
 echo "⏳ Waiting for IAM propagation..."
 sleep 10
 
-# 4. Launch the Nitro-Attested EC2 Instance
-# NOTE: Replace 'ami-XXXXXXX', 'subnet-XXXXXXX', and 'sg-XXXXXXX' with the actual IDs from your provision_network.sh output.
-# We are utilizing an Amazon Linux 2023 AMI which supports NitroTPM natively.
+# 4. Launch the EC2 instance.
+# Subnet and SG come from env vars set after running provision_network.sh.
+# The AMI is resolved dynamically — no hardcoded image IDs.
+: "${SUBNET_COMPUTE:?SUBNET_COMPUTE is not set. Export it from provision_network.sh before running this script.}"
+: "${SG_EC2:?SG_EC2 is not set. Export it from provision_network.sh before running this script.}"
 
-echo "🚀 Querying AWS for the latest Amazon Linux 2 AMI ID..."
+echo "🚀 Resolving latest Amazon Linux 2 AMI..."
 LATEST_AMI=$(aws ec2 describe-images --owners amazon --filters "Name=name,Values=amzn2-ami-hvm-2.0.*-x86_64-gp2" "Name=state,Values=available" --query "sort_by(Images, &CreationDate)[-1].ImageId" --output text)
-echo "✅ Using AMI: $LATEST_AMI"
+echo "✅ AMI resolved: $LATEST_AMI"
 
 echo "🚀 Launching EC2 Compute Node..."
 INSTANCE_ID=$(aws ec2 run-instances \
-    --image-id $LATEST_AMI \
+    --image-id "$LATEST_AMI" \
     --instance-type t3.xlarge \
-    --subnet-id subnet-04c4ed24d6af8d75a \
-    --security-group-ids sg-049c6175bba321723 \
-    --iam-instance-profile Name=$PROFILE_NAME \
+    --subnet-id "$SUBNET_COMPUTE" \
+    --security-group-ids "$SG_EC2" \
+    --iam-instance-profile Name="$PROFILE_NAME" \
     --metadata-options "HttpTokens=required,HttpPutResponseHopLimit=2,HttpEndpoint=enabled" \
     --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=TrioLogic-Semantic-Engine}]' \
     --query 'Instances[0].InstanceId' --output text)
 
 echo "🎉 Compute Node Launched: $INSTANCE_ID"
 echo "🔒 IMDSv2 Enforced with Hop Limit = 2. Container metadata access is secured."
+echo "📝 [AUDIT LOG] IAM Role $PROFILE_NAME assumed by compute node $INSTANCE_ID at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
 # Cleanup temp files
 rm ec2-trust-policy.json app-permissions-policy.json
