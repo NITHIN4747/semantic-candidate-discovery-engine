@@ -571,13 +571,13 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
         semantic_score = fast_dot_product(jd_vec, cand_vec)
 
         # 3. Confidence Band Logic
-        # HIGH: coherence is meaningful, signal is stable. sem condition dropped — it's
-        #       already captured by the hybrid score that determines rank position.
-        #       Thresholds calibrated to this dataset's distribution (coh: 0.35–0.55, stb: 0.01–0.05).
-        # LOW:  coherence below 0.35 — skills don't semantically match the job trajectory.
-        # DARK: score volatility across JD synonym variants — the keyword stuffer signal.
+        # HIGH requires structural trust (coherence + stability) AND JD relevance (semantic score).
+        # Without the semantic gate, a coherent Backend Engineer profile gets HIGH — wrong.
+        # sem > 0.57 anchors HIGH to candidates whose raw embedding is genuinely close to the JD.
+        # LOW:  coherence below 0.35 — skills don't align with job trajectory.
+        # DARK: score volatility across synonym variants — the keyword stuffer signal.
         confidence_band = "MEDIUM"
-        if coherence_score > 0.42 and stability_score <= 0.04:
+        if coherence_score > 0.42 and stability_score <= 0.04 and semantic_score > 0.56:
             confidence_band = "HIGH"
         elif coherence_score < 0.35:
             confidence_band = "LOW"
@@ -598,10 +598,9 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
             "stability_score": stability_score
         })
         
-    # Secondary heap — final 100 comes from HIGH and MEDIUM only.
-    # AI skill gate: a Senior AI Engineer shortlist requires a minimum baseline of AI/ML skills.
-    # Candidates with 0 or 1 AI/ML skills (Cloud Engineers, DevOps, Frontend, etc.) are excluded
-    # here regardless of their semantic score — they passed the lexical sieve but don't belong.
+    # Secondary heap — final 100 is built from HIGH and MEDIUM only, filtered by two gates.
+    #
+    # Gate A — AI skill count: a Senior AI Engineer shortlist needs a baseline of AI/ML skills.
     _ai_keywords = {
         "python", "pytorch", "tensorflow", "transformers", "llm", "nlp", "ml",
         "machine learning", "deep learning", "scikit-learn", "hugging face",
@@ -617,10 +616,25 @@ def rank_candidates(candidates_path: str, output_path: str) -> None:
             if any(kw in s.get("name", "").lower() for kw in _ai_keywords)
         )
 
+    # Gate B — JD-specific role blocklist: filters titles that are structurally unrelated to
+    # Senior AI Engineering regardless of their AI skill count.
+    # This is a one-time calibration for this JD — not a generalised rule.
+    _ROLE_BLOCKLIST = {
+        "qa ", "quality assurance", "frontend", "front-end", "front end",
+        "data analyst", "devops", "dev ops", "sales", "marketing", "civil", "hr ",
+        "human resources", "support engineer", "test engineer", "qa engineer",
+        "cloud engineer",
+    }
+
+    def _is_role_blocked(cand: dict) -> bool:
+        title = cand.get("profile", {}).get("current_title", "").lower()
+        return any(blocked in title for blocked in _ROLE_BLOCKLIST)
+
     high_medium = [
         c for c in final_candidates
         if c["confidence_band"] in ("HIGH", "MEDIUM")
         and _ai_skill_count(c["cand"]) >= 2
+        and not _is_role_blocked(c["cand"])
     ]
     top_100_final = high_medium[:FINAL_K]
 

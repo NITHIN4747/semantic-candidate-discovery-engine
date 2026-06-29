@@ -8,7 +8,7 @@ CAND_0046132,6,0.6031,MEDIUM | sem:0.6174 | coh:0.36 | stb:0.05 | AI Research En
 CAND_0008517,7,0.5961,HIGH | sem:0.6331 | coh:0.42 | stb:0.04 | AI Research Engineer | 5.6 yrs exp | 5 AI/ML skills | response rate 80% | open to work | GitHub score 12 | notice 120d | semantic score 0.5961
 CAND_0032271,8,0.5831,MEDIUM | sem:0.6087 | coh:0.39 | stb:0.03 | AI Research Engineer | 6.6 yrs exp | 4 AI/ML skills | response rate 79% | open to work | notice 120d | semantic score 0.5831
 CAND_0028527,9,0.5754,MEDIUM | sem:0.5920 | coh:0.39 | stb:0.03 | AI Specialist | 5.4 yrs exp | 7 AI/ML skills | response rate 90% | open to work | GitHub score 13 | notice 90d | semantic score 0.5754
-CAND_0010685,10,0.5752,HIGH | sem:0.5235 | coh:0.48 | stb:0.03 | NLP Engineer | 6.7 yrs exp | 4 AI/ML skills | response rate 83% | open to work | notice 30d | semantic score 0.5752
+CAND_0010685,10,0.5752,MEDIUM | sem:0.5235 | coh:0.48 | stb:0.03 | NLP Engineer | 6.7 yrs exp | 4 AI/ML skills | response rate 83% | open to work | notice 30d | semantic score 0.5752
 CAND_0004402,11,0.5707,MEDIUM | sem:0.5903 | coh:0.37 | stb:0.03 | AI Research Engineer | 6.0 yrs exp | 7 AI/ML skills | response rate 83% | open to work | notice 60d | semantic score 0.5707
 CAND_0010257,12,0.5704,MEDIUM | sem:0.5469 | coh:0.42 | stb:0.03 | Senior Data Scientist | 6.5 yrs exp | 6 AI/ML skills | response rate 72% | open to work | GitHub score 46 | notice 120d | semantic score 0.5704
 CAND_0041918,13,0.5694,MEDIUM | sem:0.5707 | coh:0.47 | stb:0.05 | AI Specialist | 5.7 yrs exp | 6 AI/ML skills | response rate 87% | open to work | notice 90d | semantic score 0.5694
@@ -35,10 +35,10 @@ CAND_0040724,33,0.5266,MEDIUM | sem:0.5247 | coh:0.38 | stb:0.03 | Senior Softwa
 CAND_0029135,34,0.5254,MEDIUM | sem:0.5455 | coh:0.41 | stb:0.04 | AI Specialist | 5.8 yrs exp | 3 AI/ML skills | response rate 69% | open to work | notice 60d | semantic score 0.5254
 CAND_0009398,35,0.5241,MEDIUM | sem:0.5288 | coh:0.39 | stb:0.02 | Backend Engineer | 5.8 yrs exp | 4 AI/ML skills | response rate 82% | open to work | GitHub score 17 | notice 90d | semantic score 0.5241
 CAND_0009024,36,0.5231,HIGH | sem:0.5919 | coh:0.45 | stb:0.03 | Search Engineer | 5.2 yrs exp | 7 AI/ML skills | response rate 46% | open to work | GitHub score 33 | notice 30d | semantic score 0.5231
-CAND_0011432,37,0.5205,HIGH | sem:0.5106 | coh:0.46 | stb:0.03 | Senior Data Scientist | 7.6 yrs exp | 7 AI/ML skills | response rate 67% | open to work | GitHub score 20 | notice 60d | semantic score 0.5205
+CAND_0011432,37,0.5205,MEDIUM | sem:0.5106 | coh:0.46 | stb:0.03 | Senior Data Scientist | 7.6 yrs exp | 7 AI/ML skills | response rate 67% | open to work | GitHub score 20 | notice 60d | semantic score 0.5205
 CAND_0030953,38,0.5202,MEDIUM | sem:0.5269 | coh:0.38 | stb:0.02 | Search Engineer | 7.8 yrs exp | 7 AI/ML skills | response rate 63% | GitHub score 21 | notice 45d | semantic score 0.5202
-CAND_0038631,39,0.5198,HIGH | sem:0.5532 | coh:0.42 | stb:0.01 | Backend Engineer | 7.9 yrs exp | 3 AI/ML skills | response rate 62% | open to work | notice 60d | semantic score 0.5198
-CAND_0028220,40,0.5196,HIGH | sem:0.5100 | coh:0.46 | stb:0.02 | Software Engineer | 7.7 yrs exp | 4 AI/ML skills | response rate 80% | open to work | GitHub score 10 | notice 120d | semantic score 0.5196
+CAND_0038631,39,0.5198,MEDIUM | sem:0.5532 | coh:0.42 | stb:0.01 | Backend Engineer | 7.9 yrs exp | 3 AI/ML skills | response rate 62% | open to work | notice 60d | semantic score 0.5198
+CAND_0028220,40,0.5196,MEDIUM | sem:0.5100 | coh:0.46 | stb:0.02 | Software Engineer | 7.7 yrs exp | 4 AI/ML skills | response rate 80% | open to work | GitHub score 10 | notice 120d | semantic score 0.5196
 CAND_0010770,41,0.5192,MEDIUM | sem:0.4781 | coh:0.40 | stb:0.02 | Recommendation Systems Engineer | 15.2 yrs exp | 7 AI/ML skills | response rate 73% | open to work | notice 30d | semantic score 0.5192
 CAND_0043676,42,0.5190,MEDIUM | sem:0.5215 | coh:0.37 | stb:0.03 | Senior Software Engineer (ML) | 6.1 yrs exp | 8 AI/ML skills | response rate 65% | open to work | GitHub score 85 | notice 30d | semantic score 0.5190
 CAND_0001819,43,0.5174,MEDIUM | sem:0.5495 | coh:0.37 | stb:0.03 | ML Engineer | 4.4 yrs exp | 8 AI/ML skills | response rate 75% | open to work | GitHub score 72 | notice 60d | semantic score 0.5174
@@ -47,12 +47,12 @@ CAND_0018888,45,0.5154,MEDIUM | sem:0.6135 | coh:0.38 | stb:0.03 | AI Research E
 CAND_0004555,46,0.5103,MEDIUM | sem:0.5337 | coh:0.36 | stb:0.01 | Senior Software Engineer (ML) | 5.0 yrs exp | 7 AI/ML skills | response rate 71% | open to work | notice 90d | semantic score 0.5103
 CAND_0017648,47,0.5102,MEDIUM | sem:0.5158 | coh:0.40 | stb:0.04 | AI Specialist | 4.0 yrs exp | 7 AI/ML skills | response rate 62% | open to work | GitHub score 47 | notice 120d | semantic score 0.5102
 CAND_0009691,48,0.5097,MEDIUM | sem:0.5222 | coh:0.43 | stb:0.05 | Applied ML Engineer | 6.2 yrs exp | 8 AI/ML skills | response rate 64% | open to work | GitHub score 68 | notice 120d | semantic score 0.5097
-CAND_0023587,49,0.5093,HIGH | sem:0.5009 | coh:0.43 | stb:0.03 | ML Engineer | 3.2 yrs exp | 5 AI/ML skills | response rate 90% | open to work | GitHub score 24 | notice 120d | semantic score 0.5093
+CAND_0023587,49,0.5093,MEDIUM | sem:0.5009 | coh:0.43 | stb:0.03 | ML Engineer | 3.2 yrs exp | 5 AI/ML skills | response rate 90% | open to work | GitHub score 24 | notice 120d | semantic score 0.5093
 CAND_0022023,50,0.5079,MEDIUM | sem:0.5774 | coh:0.37 | stb:0.04 | AI Research Engineer | 4.6 yrs exp | 4 AI/ML skills | response rate 47% | open to work | notice 60d | semantic score 0.5079
 CAND_0028793,51,0.5069,MEDIUM | sem:0.5108 | coh:0.38 | stb:0.02 | Search Engineer | 7.2 yrs exp | 6 AI/ML skills | response rate 57% | open to work | GitHub score 83 | notice 120d | semantic score 0.5069
 CAND_0005191,52,0.5068,MEDIUM | sem:0.5836 | coh:0.40 | stb:0.04 | AI Specialist | 6.2 yrs exp | 7 AI/ML skills | response rate 45% | open to work | GitHub score 35 | notice 60d | semantic score 0.5068
 CAND_0030348,53,0.5053,MEDIUM | sem:0.5209 | coh:0.36 | stb:0.05 | Machine Learning Engineer | 4.5 yrs exp | 8 AI/ML skills | response rate 54% | open to work | notice 45d | semantic score 0.5053
-CAND_0020954,54,0.5029,HIGH | sem:0.5423 | coh:0.44 | stb:0.01 | Senior Software Engineer | 7.1 yrs exp | 8 AI/ML skills | response rate 72% | open to work | GitHub score 53 | notice 90d | semantic score 0.5029
+CAND_0020954,54,0.5029,MEDIUM | sem:0.5423 | coh:0.44 | stb:0.01 | Senior Software Engineer | 7.1 yrs exp | 8 AI/ML skills | response rate 72% | open to work | GitHub score 53 | notice 90d | semantic score 0.5029
 CAND_0014858,55,0.5020,MEDIUM | sem:0.6387 | coh:0.45 | stb:0.05 | AI Research Engineer | 4.9 yrs exp | 6 AI/ML skills | response rate 30% | open to work | GitHub score 64 | notice 90d | semantic score 0.5020
 CAND_0011759,56,0.5013,MEDIUM | sem:0.5546 | coh:0.37 | stb:0.01 | Senior Software Engineer | 6.7 yrs exp | 4 AI/ML skills | response rate 59% | open to work | GitHub score 71 | notice 90d | semantic score 0.5013
 CAND_0043125,57,0.5013,MEDIUM | sem:0.5245 | coh:0.37 | stb:0.04 | Senior Software Engineer (ML) | 5.3 yrs exp | 7 AI/ML skills | response rate 78% | open to work | notice 90d | semantic score 0.5013
@@ -68,34 +68,34 @@ CAND_0033749,66,0.4971,MEDIUM | sem:0.5065 | coh:0.39 | stb:0.04 | Computer Visi
 CAND_0005193,67,0.4961,MEDIUM | sem:0.5066 | coh:0.39 | stb:0.01 | Senior Software Engineer | 6.2 yrs exp | 4 AI/ML skills | response rate 82% | open to work | GitHub score 66 | notice 60d | semantic score 0.4961
 CAND_0037980,68,0.4960,MEDIUM | sem:0.4861 | coh:0.37 | stb:0.02 | Senior Applied Scientist | 9.0 yrs exp | 8 AI/ML skills | response rate 63% | open to work | GitHub score 31 | notice 0d | semantic score 0.4960
 CAND_0025391,69,0.4953,MEDIUM | sem:0.5193 | coh:0.39 | stb:0.03 | Senior Software Engineer | 5.3 yrs exp | 4 AI/ML skills | response rate 70% | open to work | notice 60d | semantic score 0.4953
-CAND_0036437,70,0.4947,HIGH | sem:0.4818 | coh:0.51 | stb:0.02 | Search Engineer | 4.8 yrs exp | 2 AI/ML skills | response rate 87% | GitHub score 35 | notice 30d | semantic score 0.4947
+CAND_0036437,70,0.4947,MEDIUM | sem:0.4818 | coh:0.51 | stb:0.02 | Search Engineer | 4.8 yrs exp | 2 AI/ML skills | response rate 87% | GitHub score 35 | notice 30d | semantic score 0.4947
 CAND_0001131,71,0.4937,MEDIUM | sem:0.5643 | coh:0.38 | stb:0.05 | ML Engineer | 5.8 yrs exp | 7 AI/ML skills | response rate 58% | open to work | GitHub score 51 | notice 90d | semantic score 0.4937
 CAND_0002743,72,0.4934,MEDIUM | sem:0.4967 | coh:0.38 | stb:0.04 | Senior Software Engineer | 5.7 yrs exp | 5 AI/ML skills | response rate 77% | open to work | notice 120d | semantic score 0.4934
 CAND_0025923,73,0.4922,MEDIUM | sem:0.5419 | coh:0.38 | stb:0.02 | Senior Software Engineer (ML) | 5.0 yrs exp | 6 AI/ML skills | response rate 84% | notice 30d | semantic score 0.4922
 CAND_0039521,74,0.4922,MEDIUM | sem:0.5786 | coh:0.36 | stb:0.03 | Search Engineer | 3.0 yrs exp | 8 AI/ML skills | response rate 41% | notice 30d | semantic score 0.4922
 CAND_0001930,75,0.4921,MEDIUM | sem:0.5087 | coh:0.40 | stb:0.02 | Senior Software Engineer (ML) | 6.9 yrs exp | 6 AI/ML skills | response rate 65% | open to work | GitHub score 76 | notice 120d | semantic score 0.4921
 CAND_0012798,76,0.4921,HIGH | sem:0.5836 | coh:0.43 | stb:0.03 | AI Research Engineer | 5.1 yrs exp | 4 AI/ML skills | response rate 52% | GitHub score 12 | notice 30d | semantic score 0.4921
-CAND_0025604,77,0.4917,MEDIUM | sem:0.4984 | coh:0.36 | stb:0.01 | QA Engineer | 5.9 yrs exp | 3 AI/ML skills | response rate 77% | open to work | notice 90d | semantic score 0.4917
-CAND_0020845,78,0.4910,MEDIUM | sem:0.5804 | coh:0.35 | stb:0.02 | AI Research Engineer | 7.0 yrs exp | 6 AI/ML skills | response rate 35% | open to work | notice 60d | semantic score 0.4910
-CAND_0022463,79,0.4885,MEDIUM | sem:0.5159 | coh:0.39 | stb:0.02 | Junior ML Engineer | 6.5 yrs exp | 7 AI/ML skills | response rate 73% | open to work | GitHub score 44 | notice 120d | semantic score 0.4885
-CAND_0037000,80,0.4883,MEDIUM | sem:0.5236 | coh:0.37 | stb:0.03 | Search Engineer | 2.7 yrs exp | 10 AI/ML skills | response rate 61% | GitHub score 67 | notice 15d | semantic score 0.4883
-CAND_0023215,81,0.4876,HIGH | sem:0.5462 | coh:0.42 | stb:0.03 | Junior ML Engineer | 4.4 yrs exp | 5 AI/ML skills | response rate 43% | open to work | GitHub score 84 | notice 60d | semantic score 0.4876
-CAND_0027218,82,0.4869,MEDIUM | sem:0.5784 | coh:0.38 | stb:0.04 | AI Research Engineer | 4.7 yrs exp | 5 AI/ML skills | response rate 33% | open to work | GitHub score 77 | notice 60d | semantic score 0.4869
-CAND_0001475,83,0.4863,MEDIUM | sem:0.5168 | coh:0.39 | stb:0.03 | Data Engineer | 5.8 yrs exp | 4 AI/ML skills | response rate 72% | open to work | GitHub score 59 | notice 60d | semantic score 0.4863
-CAND_0043010,84,0.4844,MEDIUM | sem:0.4899 | coh:0.38 | stb:0.01 | Software Engineer | 8.9 yrs exp | 5 AI/ML skills | response rate 81% | open to work | notice 60d | semantic score 0.4844
-CAND_0019288,85,0.4840,MEDIUM | sem:0.5885 | coh:0.41 | stb:0.03 | AI Research Engineer | 5.7 yrs exp | 3 AI/ML skills | response rate 38% | open to work | notice 30d | semantic score 0.4840
-CAND_0001302,86,0.4834,MEDIUM | sem:0.4732 | coh:0.47 | stb:0.04 | Computer Vision Engineer | 5.8 yrs exp | 5 AI/ML skills | response rate 80% | open to work | GitHub score 30 | notice 45d | semantic score 0.4834
-CAND_0020708,87,0.4834,HIGH | sem:0.4679 | coh:0.43 | stb:0.02 | Search Engineer | 4.2 yrs exp | 7 AI/ML skills | response rate 84% | open to work | GitHub score 84 | notice 30d | semantic score 0.4834
-CAND_0037566,88,0.4831,MEDIUM | sem:0.5293 | coh:0.46 | stb:0.05 | Machine Learning Engineer | 6.9 yrs exp | 7 AI/ML skills | response rate 50% | open to work | GitHub score 73 | notice 15d | semantic score 0.4831
-CAND_0037424,89,0.4830,MEDIUM | sem:0.6222 | coh:0.39 | stb:0.04 | AI Research Engineer | 5.6 yrs exp | 6 AI/ML skills | response rate 34% | open to work | GitHub score 35 | notice 120d | semantic score 0.4830
-CAND_0048375,90,0.4822,MEDIUM | sem:0.4680 | coh:0.36 | stb:0.04 | Computer Vision Engineer | 4.4 yrs exp | 5 AI/ML skills | response rate 83% | open to work | GitHub score 82 | notice 60d | semantic score 0.4822
-CAND_0008677,91,0.4819,MEDIUM | sem:0.4905 | coh:0.39 | stb:0.02 | Senior Software Engineer | 5.8 yrs exp | 3 AI/ML skills | response rate 76% | open to work | GitHub score 36 | notice 120d | semantic score 0.4819
-CAND_0046526,92,0.4811,HIGH | sem:0.5445 | coh:0.46 | stb:0.04 | ML Engineer | 5.5 yrs exp | 4 AI/ML skills | response rate 61% | open to work | notice 90d | semantic score 0.4811
-CAND_0018401,93,0.4806,MEDIUM | sem:0.5278 | coh:0.40 | stb:0.01 | Frontend Engineer | 6.9 yrs exp | 2 AI/ML skills | response rate 72% | open to work | notice 150d | semantic score 0.4806
-CAND_0033987,94,0.4801,MEDIUM | sem:0.4987 | coh:0.37 | stb:0.04 | ML Engineer | 6.8 yrs exp | 3 AI/ML skills | response rate 71% | open to work | notice 90d | semantic score 0.4801
-CAND_0018246,95,0.4797,MEDIUM | sem:0.5137 | coh:0.42 | stb:0.04 | ML Engineer | 4.7 yrs exp | 7 AI/ML skills | response rate 54% | open to work | GitHub score 75 | notice 60d | semantic score 0.4797
-CAND_0035028,96,0.4790,MEDIUM | sem:0.5248 | coh:0.36 | stb:0.01 | Software Engineer | 6.3 yrs exp | 4 AI/ML skills | response rate 70% | notice 60d | semantic score 0.4790
-CAND_0016699,97,0.4779,MEDIUM | sem:0.4664 | coh:0.38 | stb:0.01 | Frontend Engineer | 9.0 yrs exp | 4 AI/ML skills | response rate 84% | open to work | GitHub score 13 | notice 30d | semantic score 0.4779
-CAND_0010902,98,0.4777,MEDIUM | sem:0.5171 | coh:0.36 | stb:0.01 | Software Engineer | 3.0 yrs exp | 3 AI/ML skills | response rate 71% | open to work | notice 120d | semantic score 0.4777
-CAND_0019096,99,0.4774,MEDIUM | sem:0.4960 | coh:0.40 | stb:0.03 | Data Analyst | 7.9 yrs exp | 5 AI/ML skills | response rate 74% | open to work | GitHub score 32 | notice 90d | semantic score 0.4774
-CAND_0016717,100,0.4769,MEDIUM | sem:0.5004 | coh:0.40 | stb:0.02 | Software Engineer | 8.7 yrs exp | 5 AI/ML skills | response rate 77% | open to work | notice 30d | semantic score 0.4769
+CAND_0020845,77,0.4910,MEDIUM | sem:0.5804 | coh:0.35 | stb:0.02 | AI Research Engineer | 7.0 yrs exp | 6 AI/ML skills | response rate 35% | open to work | notice 60d | semantic score 0.4910
+CAND_0022463,78,0.4885,MEDIUM | sem:0.5159 | coh:0.39 | stb:0.02 | Junior ML Engineer | 6.5 yrs exp | 7 AI/ML skills | response rate 73% | open to work | GitHub score 44 | notice 120d | semantic score 0.4885
+CAND_0037000,79,0.4883,MEDIUM | sem:0.5236 | coh:0.37 | stb:0.03 | Search Engineer | 2.7 yrs exp | 10 AI/ML skills | response rate 61% | GitHub score 67 | notice 15d | semantic score 0.4883
+CAND_0023215,80,0.4876,MEDIUM | sem:0.5462 | coh:0.42 | stb:0.03 | Junior ML Engineer | 4.4 yrs exp | 5 AI/ML skills | response rate 43% | open to work | GitHub score 84 | notice 60d | semantic score 0.4876
+CAND_0027218,81,0.4869,MEDIUM | sem:0.5784 | coh:0.38 | stb:0.04 | AI Research Engineer | 4.7 yrs exp | 5 AI/ML skills | response rate 33% | open to work | GitHub score 77 | notice 60d | semantic score 0.4869
+CAND_0001475,82,0.4863,MEDIUM | sem:0.5168 | coh:0.39 | stb:0.03 | Data Engineer | 5.8 yrs exp | 4 AI/ML skills | response rate 72% | open to work | GitHub score 59 | notice 60d | semantic score 0.4863
+CAND_0043010,83,0.4844,MEDIUM | sem:0.4899 | coh:0.38 | stb:0.01 | Software Engineer | 8.9 yrs exp | 5 AI/ML skills | response rate 81% | open to work | notice 60d | semantic score 0.4844
+CAND_0019288,84,0.4840,MEDIUM | sem:0.5885 | coh:0.41 | stb:0.03 | AI Research Engineer | 5.7 yrs exp | 3 AI/ML skills | response rate 38% | open to work | notice 30d | semantic score 0.4840
+CAND_0001302,85,0.4834,MEDIUM | sem:0.4732 | coh:0.47 | stb:0.04 | Computer Vision Engineer | 5.8 yrs exp | 5 AI/ML skills | response rate 80% | open to work | GitHub score 30 | notice 45d | semantic score 0.4834
+CAND_0020708,86,0.4834,MEDIUM | sem:0.4679 | coh:0.43 | stb:0.02 | Search Engineer | 4.2 yrs exp | 7 AI/ML skills | response rate 84% | open to work | GitHub score 84 | notice 30d | semantic score 0.4834
+CAND_0037566,87,0.4831,MEDIUM | sem:0.5293 | coh:0.46 | stb:0.05 | Machine Learning Engineer | 6.9 yrs exp | 7 AI/ML skills | response rate 50% | open to work | GitHub score 73 | notice 15d | semantic score 0.4831
+CAND_0037424,88,0.4830,MEDIUM | sem:0.6222 | coh:0.39 | stb:0.04 | AI Research Engineer | 5.6 yrs exp | 6 AI/ML skills | response rate 34% | open to work | GitHub score 35 | notice 120d | semantic score 0.4830
+CAND_0048375,89,0.4822,MEDIUM | sem:0.4680 | coh:0.36 | stb:0.04 | Computer Vision Engineer | 4.4 yrs exp | 5 AI/ML skills | response rate 83% | open to work | GitHub score 82 | notice 60d | semantic score 0.4822
+CAND_0008677,90,0.4819,MEDIUM | sem:0.4905 | coh:0.39 | stb:0.02 | Senior Software Engineer | 5.8 yrs exp | 3 AI/ML skills | response rate 76% | open to work | GitHub score 36 | notice 120d | semantic score 0.4819
+CAND_0046526,91,0.4811,MEDIUM | sem:0.5445 | coh:0.46 | stb:0.04 | ML Engineer | 5.5 yrs exp | 4 AI/ML skills | response rate 61% | open to work | notice 90d | semantic score 0.4811
+CAND_0033987,92,0.4801,MEDIUM | sem:0.4987 | coh:0.37 | stb:0.04 | ML Engineer | 6.8 yrs exp | 3 AI/ML skills | response rate 71% | open to work | notice 90d | semantic score 0.4801
+CAND_0018246,93,0.4797,MEDIUM | sem:0.5137 | coh:0.42 | stb:0.04 | ML Engineer | 4.7 yrs exp | 7 AI/ML skills | response rate 54% | open to work | GitHub score 75 | notice 60d | semantic score 0.4797
+CAND_0035028,94,0.4790,MEDIUM | sem:0.5248 | coh:0.36 | stb:0.01 | Software Engineer | 6.3 yrs exp | 4 AI/ML skills | response rate 70% | notice 60d | semantic score 0.4790
+CAND_0010902,95,0.4777,MEDIUM | sem:0.5171 | coh:0.36 | stb:0.01 | Software Engineer | 3.0 yrs exp | 3 AI/ML skills | response rate 71% | open to work | notice 120d | semantic score 0.4777
+CAND_0016717,96,0.4769,MEDIUM | sem:0.5004 | coh:0.40 | stb:0.02 | Software Engineer | 8.7 yrs exp | 5 AI/ML skills | response rate 77% | open to work | notice 30d | semantic score 0.4769
+CAND_0019845,97,0.4763,MEDIUM | sem:0.5274 | coh:0.45 | stb:0.04 | AI Specialist | 3.4 yrs exp | 6 AI/ML skills | response rate 78% | GitHub score 14 | notice 30d | semantic score 0.4763
+CAND_0038944,98,0.4763,MEDIUM | sem:0.4858 | coh:0.46 | stb:0.04 | Senior Data Engineer | 6.2 yrs exp | 4 AI/ML skills | response rate 82% | open to work | notice 90d | semantic score 0.4763
+CAND_0042506,99,0.4761,MEDIUM | sem:0.4992 | coh:0.48 | stb:0.03 | Search Engineer | 4.2 yrs exp | 10 AI/ML skills | response rate 48% | open to work | GitHub score 64 | notice 15d | semantic score 0.4761
+CAND_0007861,100,0.4759,MEDIUM | sem:0.5563 | coh:0.36 | stb:0.04 | Senior Software Engineer (ML) | 5.3 yrs exp | 6 AI/ML skills | response rate 57% | notice 90d | semantic score 0.4759
