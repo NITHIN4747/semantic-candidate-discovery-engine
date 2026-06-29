@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/security-pip--audit-success?style=flat-square" alt="Security Audited" />
   <img src="https://img.shields.io/badge/infra-AWS_Zero_Trust-232F3E?style=flat-square&logo=amazon-aws&logoColor=white" alt="AWS Zero Trust" />
   <img src="https://img.shields.io/badge/vector_db-pgvector_HNSW-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="pgvector HNSW" />
-  <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="MIT License" />
+  <img src="https://img.shields.io/badge/License-Evaluation_Only-red?style=flat-square" alt="License: Proprietary" />
 </p>
 
 <br />
