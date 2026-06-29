@@ -1,15 +1,46 @@
-## 📝 Description
-Briefly describe the changes in this Pull Request.
+## Description
 
-## 🔗 Related Task
-- Closes Task # (if applicable)
+Briefly describe what this PR changes and why.
 
-## 🚨 Sandbox Constraint Checklist (Mandatory)
-Before this PR can be merged, confirm the following Hack2Skill constraints have NOT been violated:
-- [ ] NO external libraries for Cosine Similarity (e.g., NumPy, SciPy).
-- [ ] NO external API calls to OpenAI, Anthropic, or HuggingFace Inference Endpoints.
-- [ ] Engine memory usage stays safely under 16GB RAM (use chunked streaming).
-- [ ] Execution completes within the 5-minute offline limit.
+## Related Issue / Task
 
-## 📸 Screenshots / Outputs (UI & Data only)
-Attach any relevant terminal output (like `validate_submission.py` success) or Streamlit UI screenshots here.
+Closes #
+
+---
+
+## Checklist
+
+### Sandbox Compliance (mandatory before merge)
+
+- [ ] No `numpy` or `scipy` imports added (`grep -rE "^import numpy|^from numpy" --include="*.py" .` returns clean)
+- [ ] No external API calls at rank time (OpenAI, Anthropic, HuggingFace Inference Endpoints)
+- [ ] Peak memory stays under 16 GB — streaming JSONL reader in place, no full dataset loads
+- [ ] Pipeline completes within 300 seconds on CPU-only hardware
+
+### Code Quality
+
+- [ ] `flake8` passes with no fatal errors
+- [ ] `python validate_submission.py submission.csv` outputs `Submission is valid.`
+- [ ] Commit message is descriptive and written from the author's perspective
+
+### Infrastructure (if infra scripts were changed)
+
+- [ ] No hardcoded VPC IDs, subnet IDs, or security group IDs — all read from env/params
+- [ ] IAM roles follow least-privilege — no `AdministratorAccess` or wildcard `*` actions
+- [ ] `IMDSv2` hop limit set to 2 on any new EC2 provisioning
+
+---
+
+## Testing Evidence
+
+Paste the output of `python validate_submission.py submission.csv` here:
+
+```
+Submission is valid.
+```
+
+Paste the pipeline runtime here (from the final line of `make bench` output):
+
+```
+[t]   Total runtime: ___s
+```

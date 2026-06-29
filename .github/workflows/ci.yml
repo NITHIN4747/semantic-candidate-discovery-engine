@@ -1,28 +1,43 @@
 name: SRE Zero-Trust Pipeline
+
 on:
   push:
-    branches: [ "main", "active" ]
+    branches: ["main", "feat/*"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build-and-test:
+  quality-gate:
+    name: Quality Gate
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Enforce Formatting & Linting
-      run: |
-        pip install flake8
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    - name: Verify SRE Constraints (No NumPy)
-      run: |
-        ! grep -rE "^import numpy|^from numpy" --include="*.py" .
-    - name: Vulnerability Management (Safety Check)
-      continue-on-error: true
-      run: |
-        pip install safety
-        safety check -r requirements.txt || true
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Enforce syntax correctness
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Verify SRE constraint — no NumPy imports
+        run: |
+          if grep -rE "^import numpy|^from numpy" --include="*.py" .; then
+            echo "FAIL: numpy import found. Sandbox constraint violated."
+            exit 1
+          fi
+          echo "OK: No numpy imports detected."
+
+      - name: Verify output validator exists and is executable
+        run: python validate_submission.py --help 2>/dev/null || python -c "import validate_submission; print('OK: validator importable')"
+
+      - name: Vulnerability scan (non-blocking manifest capture)
+        continue-on-error: true
+        run: |
+          pip install safety
+          safety check -r requirements.txt || true
