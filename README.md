@@ -38,18 +38,18 @@ A five-stage funnel trades off retrieval breadth for computational depth. Heavy 
 
 ```mermaid
 graph TD
-    A["Raw Candidates: 50,000 JSONL"] -->|Chunked Streaming| B("L1/L2: BM25 Lexical Sieve")
-    B -->|"L1 drops 28,885 → L2 slices top 5k"| C{"Top 5,000 Candidates"}
+    A["Raw Candidates:<br/>50,000 JSONL"] -->|Chunked Streaming| B("L1/L2:<br/>BM25 Lexical Sieve")
+    B -->|"L1 drops 28,885<br/>L2 slices top 5k"| C{"Top 5,000<br/>Candidates"}
 
-    C -->|PyTorch INT8 CPU| D["L3: Dense Semantic Rerank"]
-    D -->|Pure dot product on unit vectors| E{"Top 500 Candidates"}
+    C -->|PyTorch INT8 CPU| D["L3: Dense<br/>Semantic Rerank"]
+    D -->|"Pure dot product<br/>on unit vectors"| E{"Top 500<br/>Candidates"}
 
-    E -->|"JD Synonym Perturbation ×3"| F["Layer 5: Epistemic Confidence Engine"]
+    E -->|"JD Synonym<br/>Perturbation ×3"| F["Layer 5: Epistemic<br/>Confidence Engine"]
 
-    F -->|"coherence < 0.35 OR σ > 0.05"| G["Drop: DARK Band — Keyword Stuffers"]
-    F -->|Passed both stability gates| H["AI Skill Gate + Role Blocklist Filter"]
+    F -->|"coherence < 0.35<br/>OR σ > 0.05"| G["Drop: DARK Band<br/>Keyword Stuffers"]
+    F -->|"Passed both<br/>stability gates"| H["AI Skill Gate +<br/>Role Blocklist"]
 
-    H --> I[("Final CSV: Top 100 HIGH / MEDIUM")]
+    H --> I[("Final CSV:<br/>Top 100 HIGH/MEDIUM")]
 
     style A fill:#2e3440,stroke:#d8dee9,color:#eceff4
     style G fill:#bf616a,stroke:#3b4252,color:#eceff4
